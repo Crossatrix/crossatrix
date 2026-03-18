@@ -1,1 +1,4 @@
 project_id = "digjxtmzafzcgytgcwmb"
+
+[functions.crossatrix-auth]
+verify_jwt = false
