@@ -1,0 +1,200 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
+
+const transition = { type: "spring", duration: 0.4, bounce: 0 };
+
+const PasswordStrength = ({ password }: { password: string }) => {
+  const getStrength = (pw: string) => {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return score;
+  };
+
+  const strength = getStrength(password);
+  const labels = ["Weak", "Fair", "Good", "Strong"];
+  const colors = ["bg-destructive", "bg-yellow-500", "bg-primary/60", "bg-primary"];
+
+  if (!password) return null;
+
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      <div className="flex gap-1 flex-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`h-0.5 flex-1 rounded-full transition-brand ${
+              i < strength ? colors[strength - 1] : "bg-muted/30"
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-muted-foreground font-mono">
+        {labels[strength - 1] || ""}
+      </span>
+    </div>
+  );
+};
+
+export default function AuthPage() {
+  const [mode, setMode] = useState<"login" | "signup">("signup");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        navigate("/dashboard");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate("/dashboard");
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...transition, duration: 0.6 }}
+        className="w-full max-w-[400px]"
+      >
+        {/* Brand */}
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-2 w-2 rounded-full bg-primary glow-primary" />
+            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Identity Nexus
+            </span>
+          </div>
+          <h1 className="text-4xl font-semibold tracking-tight-brand text-foreground">
+            {mode === "signup"
+              ? "Provision your Crossatrix Identity."
+              : "Verify your Identity."}
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            {mode === "signup"
+              ? "Create a unified credential for the Cross-A ecosystem."
+              : "Authenticate to access your connected services."}
+          </p>
+        </div>
+
+        {/* Form */}
+        <motion.form
+          onSubmit={handleSubmit}
+          animate={shake ? { x: [0, -8, 8, -4, 4, 0] } : {}}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="space-y-4"
+        >
+          <div>
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+          <div>
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+            />
+            {mode === "signup" && <PasswordStrength password={password} />}
+          </div>
+
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="text-sm text-destructive"
+              >
+                {error}
+              </motion.p>
+            )}
+          </AnimatePresence>
+
+          <Button
+            type="submit"
+            variant="signal"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading
+              ? "Processing..."
+              : mode === "signup"
+              ? "Create Identity"
+              : "Authenticate"}
+          </Button>
+        </motion.form>
+
+        {/* Toggle mode */}
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === "signup" ? "login" : "signup");
+              setError("");
+            }}
+            className="text-sm text-muted-foreground hover:text-primary transition-brand"
+          >
+            {mode === "signup"
+              ? "Already have an identity? Authenticate"
+              : "Need an identity? Create one"}
+          </button>
+        </div>
+
+        {mode === "login" && (
+          <div className="mt-2 text-center">
+            <button
+              type="button"
+              onClick={() => navigate("/trouble")}
+              className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-brand"
+            >
+              Trouble signing in?
+            </button>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-12 pt-6 border-t border-border">
+          <p className="text-xs text-muted-foreground/50 font-mono text-center">
+            crossatrix.identity.v1 • encrypted at rest
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
