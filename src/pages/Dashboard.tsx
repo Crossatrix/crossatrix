@@ -3,43 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
-const AppCard = ({
-  name,
-  domain,
-  description,
-  delay,
-}: {
-  name: string;
-  domain: string;
-  description: string;
-  delay: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ ...transition, delay }}
-    whileHover={{ y: -2 }}
-    className="p-6 rounded-2xl border border-border bg-card shadow-vault"
-  >
-    <div className="flex items-center gap-3">
-      <div className="h-2 w-2 rounded-full bg-primary glow-primary animate-pulse" />
-      <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-        Available
-      </span>
-    </div>
-    <h3 className="mt-4 text-xl font-semibold text-foreground">{name}</h3>
-    <p className="text-sm text-muted-foreground mt-1">{description}</p>
-    <p className="text-xs font-mono text-muted-foreground/60 mt-3">{domain}</p>
-  </motion.div>
-);
-
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [crossChatId, setCrossChatId] = useState("");
+  const [crossiAiId, setCrossiAiId] = useState("");
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,10 +28,43 @@ export default function Dashboard() {
       setUser(session?.user ?? null);
       setLoading(false);
       if (!session?.user) navigate("/");
+      else loadProfile(session.user.id);
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const loadProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("cross_chat_id, crossi_ai_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (data) {
+      setCrossChatId(data.cross_chat_id || "");
+      setCrossiAiId(data.crossi_ai_id || "");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(
+        { user_id: user.id, cross_chat_id: crossChatId, crossi_ai_id: crossiAiId, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+
+    setSaving(false);
+    if (error) {
+      toast.error("Failed to save IDs");
+    } else {
+      toast.success("IDs saved successfully");
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -73,13 +81,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen px-4 py-8 md:py-16">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-lg mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={transition}
-          className="flex items-center justify-between mb-12"
+          className="flex items-center justify-between mb-10"
         >
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-primary glow-primary" />
@@ -88,96 +96,83 @@ export default function Dashboard() {
             </span>
           </div>
           <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
-            Terminate Session
+            Sign Out
           </Button>
         </motion.div>
 
-        {/* Identity Section */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Left: Identity */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ ...transition, delay: 0.1 }}
-          >
-            <h1 className="text-3xl font-semibold tracking-tight-brand text-foreground mb-6">
-              Command Center
-            </h1>
-            <div className="p-6 rounded-2xl border border-border bg-card shadow-vault">
-              <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-4">
-                Identity Details
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <span className="text-xs text-muted-foreground">Email</span>
-                  <p className="text-sm font-mono text-foreground mt-1">{user?.email}</p>
-                </div>
-                <div>
-                  <span className="text-xs text-muted-foreground">User ID</span>
-                  <p className="text-xs font-mono text-muted-foreground/70 mt-1 break-all tabular-nums">
-                    {user?.id}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-xs text-muted-foreground">Created</span>
-                  <p className="text-sm font-mono text-foreground mt-1">
-                    {user?.created_at
-                      ? new Date(user.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+        {/* Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.1 }}
+          className="text-2xl font-semibold tracking-tight-brand text-foreground mb-2"
+        >
+          Link Your Services
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ ...transition, delay: 0.15 }}
+          className="text-sm text-muted-foreground mb-8"
+        >
+          Enter your IDs to connect Cross-Chat and Crossi-AI to your Crossatrix account.
+        </motion.p>
 
-          {/* Right: Connected Apps */}
-          <div className="space-y-4">
-            <motion.h2
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ ...transition, delay: 0.2 }}
-              className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2"
-            >
-              Connected Services
-            </motion.h2>
-            <AppCard
-              name="Cross-A Chat"
-              domain="cross-a-chat.lovable.app"
-              description="Real-time messaging • Authorized via API"
-              delay={0.3}
-            />
-            <AppCard
-              name="Cross-A AI"
-              domain="cross-a-ai.lovable.app"
-              description="AI assistant • Authorized via API"
-              delay={0.4}
+        {/* ID Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.2 }}
+          className="p-6 rounded-2xl border border-border bg-card shadow-vault space-y-6"
+        >
+          <div className="space-y-2">
+            <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Cross-Chat ID
+            </label>
+            <Input
+              placeholder="Enter your Cross-Chat ID"
+              value={crossChatId}
+              onChange={(e) => setCrossChatId(e.target.value)}
             />
           </div>
-        </div>
 
-        {/* API Info */}
+          <div className="space-y-2">
+            <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Crossi-AI ID
+            </label>
+            <Input
+              placeholder="Enter your Crossi-AI ID"
+              value={crossiAiId}
+              onChange={(e) => setCrossiAiId(e.target.value)}
+            />
+          </div>
+
+          <Button
+            variant="signal"
+            className="w-full"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save IDs"}
+          </Button>
+        </motion.div>
+
+        {/* User info */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...transition, delay: 0.5 }}
-          className="mt-12 p-6 rounded-2xl border border-border bg-card shadow-vault"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ ...transition, delay: 0.3 }}
+          className="mt-8 p-4 rounded-xl border border-border bg-card/50"
         >
-          <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-4">
-            API Endpoint
-          </h2>
-          <p className="text-xs font-mono text-muted-foreground/70 break-all tabular-nums">
-            POST /functions/v1/crossatrix-auth — Verify credentials from external services
+          <p className="text-xs text-muted-foreground">
+            Signed in as <span className="font-mono text-foreground">{user?.email}</span>
           </p>
         </motion.div>
 
         {/* Footer */}
-        <div className="mt-12 pt-6 border-t border-border">
+        <div className="mt-10 pt-6 border-t border-border">
           <p className="text-xs text-muted-foreground/50 font-mono text-center">
-            crossatrix.identity.v1 • encrypted at rest
+            crossatrix.identity.v1
           </p>
         </div>
       </div>
