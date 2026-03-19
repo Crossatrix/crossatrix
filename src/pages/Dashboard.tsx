@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import TransactionHistory from "@/components/TransactionHistory";
+import CroinChart from "@/components/CroinChart";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
