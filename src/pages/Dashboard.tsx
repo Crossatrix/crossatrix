@@ -138,6 +138,9 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Croin Trading Chart */}
+        <CroinChart userEmail={user?.email} />
+
         {/* Title */}
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
