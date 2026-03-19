@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      croin_price_history: {
+        Row: {
+          changed_by: string
+          created_at: string
+          id: string
+          price: number
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string
+          id?: string
+          price?: number
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string
+          id?: string
+          price?: number
+        }
+        Relationships: []
+      }
       croin_transactions: {
         Row: {
           amount: number
