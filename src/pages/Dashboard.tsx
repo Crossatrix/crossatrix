@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [crossChatId, setCrossChatId] = useState("");
   const [crossiAiId, setCrossiAiId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [croinBalance, setCroinBalance] = useState<number>(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +29,10 @@ export default function Dashboard() {
       setUser(session?.user ?? null);
       setLoading(false);
       if (!session?.user) navigate("/");
-      else loadProfile(session.user.id);
+      else {
+        loadProfile(session.user.id);
+        loadBalance(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -45,6 +49,16 @@ export default function Dashboard() {
       setCrossChatId(data.cross_chat_id || "");
       setCrossiAiId(data.crossi_ai_id || "");
     }
+  };
+
+  const loadBalance = async (userId: string) => {
+    const { data } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    setCroinBalance(data?.balance ?? 0);
   };
 
   const handleSave = async () => {
@@ -98,6 +112,28 @@ export default function Dashboard() {
           <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
             Sign Out
           </Button>
+        </motion.div>
+
+        {/* Croins Balance */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.05 }}
+          className="mb-8 p-6 rounded-2xl border border-primary/30 bg-primary/5 shadow-vault"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
+                Croins Balance
+              </p>
+              <p className="text-3xl font-bold tracking-tight text-foreground">
+                ¢{croinBalance.toLocaleString()}
+              </p>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <span className="text-2xl font-bold text-primary">¢</span>
+            </div>
+          </div>
         </motion.div>
 
         {/* Title */}
