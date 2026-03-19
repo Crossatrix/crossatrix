@@ -38,16 +38,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch profile with service IDs using the user's session
+    // Fetch profile and wallet using the user's session
     const authedClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${data.session.access_token}` } },
     });
 
-    const { data: profile } = await authedClient
-      .from("profiles")
-      .select("cross_chat_id, crossi_ai_id")
-      .eq("user_id", data.user.id)
-      .maybeSingle();
+    const [profileRes, walletRes] = await Promise.all([
+      authedClient
+        .from("profiles")
+        .select("cross_chat_id, crossi_ai_id")
+        .eq("user_id", data.user.id)
+        .maybeSingle(),
+      authedClient
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", data.user.id)
+        .maybeSingle(),
+    ]);
 
     return new Response(
       JSON.stringify({
@@ -56,8 +63,9 @@ Deno.serve(async (req) => {
           email: data.user.email,
           created_at: data.user.created_at,
         },
-        cross_chat_id: profile?.cross_chat_id || null,
-        crossi_ai_id: profile?.crossi_ai_id || null,
+        cross_chat_id: profileRes.data?.cross_chat_id || null,
+        crossi_ai_id: profileRes.data?.crossi_ai_id || null,
+        croins_balance: walletRes.data?.balance ?? 0,
         access_token: data.session.access_token,
         expires_at: data.session.expires_at,
       }),
