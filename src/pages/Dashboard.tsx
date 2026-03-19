@@ -194,6 +194,9 @@ export default function Dashboard() {
           </Button>
         </motion.div>
 
+        {/* Transaction History */}
+        {user && <TransactionHistory userId={user.id} />}
+
         {/* User info */}
         <motion.div
           initial={{ opacity: 0 }}
