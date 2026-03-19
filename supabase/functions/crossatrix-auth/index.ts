@@ -38,6 +38,17 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch profile with service IDs using the user's session
+    const authedClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${data.session.access_token}` } },
+    });
+
+    const { data: profile } = await authedClient
+      .from("profiles")
+      .select("cross_chat_id, crossi_ai_id")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+
     return new Response(
       JSON.stringify({
         user: {
@@ -45,6 +56,8 @@ Deno.serve(async (req) => {
           email: data.user.email,
           created_at: data.user.created_at,
         },
+        cross_chat_id: profile?.cross_chat_id || null,
+        crossi_ai_id: profile?.crossi_ai_id || null,
         access_token: data.session.access_token,
         expires_at: data.session.expires_at,
       }),
