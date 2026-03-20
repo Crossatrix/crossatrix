@@ -60,8 +60,14 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
       )
       .subscribe();
 
+    // Trigger micro-fluctuations every 30 seconds
+    const simulationInterval = setInterval(async () => {
+      await supabase.functions.invoke("croin-simulate");
+    }, 30000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(simulationInterval);
     };
   }, []);
 
