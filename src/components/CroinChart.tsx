@@ -18,7 +18,7 @@ interface PricePoint {
 
 const chartConfig = {
   price: {
-    label: "Price (¢)",
+    label: "Price",
     color: "hsl(var(--primary))",
   },
 };
@@ -82,7 +82,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
         toast.error("Failed to update price");
       } else {
         toast.success(
-          `Price ${action === "up" ? "increased" : "decreased"} to ¢${result.new_price}`
+          `Price ${action === "up" ? "increased" : "decreased"} to ${result.new_price}`
         );
       }
     } catch {
@@ -110,7 +110,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
           </p>
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight text-foreground">
-              ¢{currentPrice.toFixed(2)}
+              {currentPrice.toFixed(2)}
             </span>
             <span
               className={`text-xs font-mono flex items-center gap-0.5 ${
@@ -124,7 +124,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
           </div>
         </div>
         <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-          <span className="text-lg font-bold text-primary">¢</span>
+          <span className="text-lg font-bold text-primary">C</span>
         </div>
       </div>
 
@@ -148,7 +148,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
             tickLine={false}
             axisLine={false}
             width={40}
-            tickFormatter={(v) => `¢${v}`}
+            tickFormatter={(v) => `${v}`}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Area
