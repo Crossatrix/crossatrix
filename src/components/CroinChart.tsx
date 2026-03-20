@@ -142,7 +142,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
             tickLine={false}
             axisLine={false}
             width={40}
-            tickFormatter={(v) => `$${v}`}
+            tickFormatter={(v) => `¢${v}`}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Area
