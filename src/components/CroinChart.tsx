@@ -77,7 +77,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
     setLoading(true);
     try {
       const { data: result, error } = await supabase.functions.invoke("croin-price", {
-        body: { action },
+        body: { action, magnitude },
       });
 
       if (error) {
