@@ -18,7 +18,7 @@ interface PricePoint {
 
 const chartConfig = {
   price: {
-    label: "Price ($)",
+    label: "Price (¢)",
     color: "hsl(var(--primary))",
   },
 };
