@@ -110,7 +110,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
           </p>
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight text-foreground">
-              ¢{currentPrice.toFixed(2)}
+              {currentPrice.toFixed(2)}
             </span>
             <span
               className={`text-xs font-mono flex items-center gap-0.5 ${
