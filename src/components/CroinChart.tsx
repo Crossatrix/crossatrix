@@ -27,6 +27,7 @@ const chartConfig = {
 export default function CroinChart({ userEmail }: { userEmail?: string }) {
   const [data, setData] = useState<PricePoint[]>([]);
   const [loading, setLoading] = useState(false);
+  const [magnitude, setMagnitude] = useState(0.05);
   const isAdmin = userEmail === "cross.a.trix.owner@hotmail.com";
 
   const fetchPrices = async () => {
