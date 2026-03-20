@@ -82,7 +82,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
         toast.error("Failed to update price");
       } else {
         toast.success(
-          `Price ${action === "up" ? "increased" : "decreased"} to ¢${result.new_price}`
+          `Price ${action === "up" ? "increased" : "decreased"} to ${result.new_price}`
         );
       }
     } catch {
