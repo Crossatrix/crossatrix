@@ -124,7 +124,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
           </div>
         </div>
         <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-          <span className="text-lg font-bold text-primary">¢</span>
+          <span className="text-lg font-bold text-primary">C</span>
         </div>
       </div>
 
