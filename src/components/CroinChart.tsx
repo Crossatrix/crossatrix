@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import {
   ChartContainer,
   ChartTooltip,
@@ -26,6 +27,7 @@ const chartConfig = {
 export default function CroinChart({ userEmail }: { userEmail?: string }) {
   const [data, setData] = useState<PricePoint[]>([]);
   const [loading, setLoading] = useState(false);
+  const [magnitude, setMagnitude] = useState(0.05);
   const isAdmin = userEmail === "cross.a.trix.owner@hotmail.com";
 
   const fetchPrices = async () => {
@@ -75,7 +77,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
     setLoading(true);
     try {
       const { data: result, error } = await supabase.functions.invoke("croin-price", {
-        body: { action },
+        body: { action, magnitude },
       });
 
       if (error) {
@@ -162,23 +164,41 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
       </ChartContainer>
 
       {isAdmin && (
-        <div className="mt-4 flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 gap-2 text-green-400 border-green-400/30 hover:bg-green-400/10"
-            onClick={() => handlePriceChange("up")}
-            disabled={loading}
-          >
-            <TrendingUp className="h-4 w-4" /> Push Up
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 gap-2 text-red-400 border-red-400/30 hover:bg-red-400/10"
-            onClick={() => handlePriceChange("down")}
-            disabled={loading}
-          >
-            <TrendingDown className="h-4 w-4" /> Push Down
-          </Button>
+        <div className="mt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Magnitude
+            </span>
+            <span className="text-sm font-mono font-bold text-foreground">
+              {magnitude.toFixed(2)}
+            </span>
+          </div>
+          <Slider
+            value={[magnitude]}
+            onValueChange={(v) => setMagnitude(v[0])}
+            min={0.01}
+            max={1}
+            step={0.01}
+            className="w-full"
+          />
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 text-green-400 border-green-400/30 hover:bg-green-400/10"
+              onClick={() => handlePriceChange("up")}
+              disabled={loading}
+            >
+              <TrendingUp className="h-4 w-4" /> Push Up
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 text-red-400 border-red-400/30 hover:bg-red-400/10"
+              onClick={() => handlePriceChange("down")}
+              disabled={loading}
+            >
+              <TrendingDown className="h-4 w-4" /> Push Down
+            </Button>
+          </div>
         </div>
       )}
     </motion.div>

@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { action } = await req.json();
+    const { action, magnitude } = await req.json();
 
     // Get latest price
     const { data: latest } = await supabase
@@ -57,8 +57,10 @@ Deno.serve(async (req) => {
 
     const currentPrice = Number(latest?.price ?? 1);
 
-    // Random change between 0.01 and 0.05
-    const change = Math.round((Math.random() * 4 + 1)) / 100;
+    // Use magnitude (0.01 to 1.00) if provided, otherwise random 0.01-0.05
+    const change = typeof magnitude === "number" && magnitude > 0
+      ? Math.round(magnitude * 100) / 100
+      : Math.round((Math.random() * 4 + 1)) / 100;
     let newPrice: number;
 
     if (action === "up") {
