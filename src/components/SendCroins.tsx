@@ -25,6 +25,7 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [sending, setSending] = useState(false);
+  const [reason, setReason] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const parsedAmount = parseInt(amount, 10);
@@ -45,7 +46,7 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
     setConfirmOpen(false);
     setSending(true);
     const { data, error } = await supabase.functions.invoke("send-croins", {
-      body: { recipient_email: email.trim(), amount: parsedAmount },
+      body: { recipient_email: email.trim(), amount: parsedAmount, reason: reason.trim() || undefined },
     });
 
     setSending(false);
@@ -58,6 +59,7 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
     toast.success(`Sent ¢${parsedAmount} to ${email.trim()}`);
     setEmail("");
     setAmount("");
+    setReason("");
     onSent();
   };
 
@@ -102,6 +104,18 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
           />
         </div>
 
+        <div className="space-y-2">
+          <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Reason (optional)
+          </label>
+          <Input
+            type="text"
+            placeholder="e.g. Payment for design work"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+
         <Button
           variant="signal"
           className="w-full"
@@ -118,7 +132,11 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
             <AlertDialogTitle>Confirm Transfer</AlertDialogTitle>
             <AlertDialogDescription>
               You are about to send <span className="font-semibold text-foreground">¢{parsedAmount?.toLocaleString()}</span> to{" "}
-              <span className="font-mono text-foreground">{email.trim()}</span>. This action cannot be undone.
+              <span className="font-mono text-foreground">{email.trim()}</span>.
+              {reason.trim() && (
+                <span className="block mt-1">Reason: <span className="font-medium text-foreground">{reason.trim()}</span></span>
+              )}
+              <span className="block mt-1">This action cannot be undone.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

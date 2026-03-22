@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
     const senderId = claimsData.claims.sub as string;
     const senderEmail = claimsData.claims.email as string;
 
-    const { recipient_email, amount } = await req.json();
+    const { recipient_email, amount, reason } = await req.json();
+    const reasonSuffix = reason && typeof reason === "string" ? ` — ${reason.trim()}` : "";
 
     if (!recipient_email || typeof recipient_email !== "string") {
       return new Response(JSON.stringify({ error: "recipient_email is required" }), {
@@ -129,13 +130,13 @@ Deno.serve(async (req) => {
         user_id: senderId,
         amount,
         type: "debit",
-        description: `Sent to ${recipient_email}`,
+        description: `Sent to ${recipient_email}${reasonSuffix}`,
       },
       {
         user_id: recipient.id,
         amount,
         type: "credit",
-        description: `Received from ${senderEmail}`,
+        description: `Received from ${senderEmail}${reasonSuffix}`,
       },
     ]);
 
