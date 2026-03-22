@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.croins]
 verify_jwt = false
+
+[functions.send-croins]
+verify_jwt = false
