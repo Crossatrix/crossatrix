@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     await supabase
       .from("wallets")
       .update({ balance: senderBalance - amount, updated_at: new Date().toISOString() })
-      .eq("user_id", sender.id);
+      .eq("user_id", senderId);
 
     // Credit recipient (ensure wallet exists)
     const { data: recipientWallet } = await supabase
