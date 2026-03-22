@@ -24,18 +24,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the sender
+    // Verify the sender using getClaims
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { authorization: authHeader } },
     });
-    const { data: { user: sender }, error: authError } = await userClient.auth.getUser();
-    if (authError || !sender) {
+    
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const senderId = claimsData.claims.sub as string;
+    const senderEmail = claimsData.claims.email as string;
 
     const { recipient_email, amount } = await req.json();
 
