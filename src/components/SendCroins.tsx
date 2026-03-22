@@ -46,7 +46,7 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
     setConfirmOpen(false);
     setSending(true);
     const { data, error } = await supabase.functions.invoke("send-croins", {
-      body: { recipient_email: email.trim(), amount: parsedAmount },
+      body: { recipient_email: email.trim(), amount: parsedAmount, reason: reason.trim() || undefined },
     });
 
     setSending(false);
