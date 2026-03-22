@@ -130,13 +130,13 @@ Deno.serve(async (req) => {
         user_id: senderId,
         amount,
         type: "debit",
-        description: `Sent to ${recipient_email}`,
+        description: `Sent to ${recipient_email}${reasonSuffix}`,
       },
       {
         user_id: recipient.id,
         amount,
         type: "credit",
-        description: `Received from ${senderEmail}`,
+        description: `Received from ${senderEmail}${reasonSuffix}`,
       },
     ]);
 
