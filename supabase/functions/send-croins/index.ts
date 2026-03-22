@@ -24,18 +24,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the sender
+    // Verify the sender using getClaims
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { authorization: authHeader } },
     });
-    const { data: { user: sender }, error: authError } = await userClient.auth.getUser();
-    if (authError || !sender) {
+    
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const senderId = claimsData.claims.sub as string;
+    const senderEmail = claimsData.claims.email as string;
 
     const { recipient_email, amount } = await req.json();
 
@@ -53,7 +58,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (recipient_email.toLowerCase() === sender.email?.toLowerCase()) {
+    if (recipient_email.toLowerCase() === senderEmail?.toLowerCase()) {
       return new Response(JSON.stringify({ error: "Cannot send Croins to yourself" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -84,7 +89,7 @@ Deno.serve(async (req) => {
     const { data: senderWallet } = await supabase
       .from("wallets")
       .select("balance")
-      .eq("user_id", sender.id)
+      .eq("user_id", senderId)
       .maybeSingle();
 
     const senderBalance = senderWallet?.balance ?? 0;
@@ -100,7 +105,7 @@ Deno.serve(async (req) => {
     await supabase
       .from("wallets")
       .update({ balance: senderBalance - amount, updated_at: new Date().toISOString() })
-      .eq("user_id", sender.id);
+      .eq("user_id", senderId);
 
     // Credit recipient (ensure wallet exists)
     const { data: recipientWallet } = await supabase
@@ -121,7 +126,7 @@ Deno.serve(async (req) => {
     // Log transactions
     await supabase.from("croin_transactions").insert([
       {
-        user_id: sender.id,
+        user_id: senderId,
         amount,
         type: "debit",
         description: `Sent to ${recipient_email}`,
@@ -130,7 +135,7 @@ Deno.serve(async (req) => {
         user_id: recipient.id,
         amount,
         type: "credit",
-        description: `Received from ${sender.email}`,
+        description: `Received from ${senderEmail}`,
       },
     ]);
 
