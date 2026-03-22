@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     const { data: senderWallet } = await supabase
       .from("wallets")
       .select("balance")
-      .eq("user_id", sender.id)
+      .eq("user_id", senderId)
       .maybeSingle();
 
     const senderBalance = senderWallet?.balance ?? 0;
