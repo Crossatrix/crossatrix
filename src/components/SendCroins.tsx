@@ -59,6 +59,7 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
     toast.success(`Sent ¢${parsedAmount} to ${email.trim()}`);
     setEmail("");
     setAmount("");
+    setReason("");
     onSent();
   };
 
