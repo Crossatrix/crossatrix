@@ -132,7 +132,11 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
             <AlertDialogTitle>Confirm Transfer</AlertDialogTitle>
             <AlertDialogDescription>
               You are about to send <span className="font-semibold text-foreground">¢{parsedAmount?.toLocaleString()}</span> to{" "}
-              <span className="font-mono text-foreground">{email.trim()}</span>. This action cannot be undone.
+              <span className="font-mono text-foreground">{email.trim()}</span>.
+              {reason.trim() && (
+                <span className="block mt-1">Reason: <span className="font-medium text-foreground">{reason.trim()}</span></span>
+              )}
+              <span className="block mt-1">This action cannot be undone.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
