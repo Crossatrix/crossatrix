@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     // Log transactions
     await supabase.from("croin_transactions").insert([
       {
-        user_id: sender.id,
+        user_id: senderId,
         amount,
         type: "debit",
         description: `Sent to ${recipient_email}`,
