@@ -104,6 +104,18 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
           />
         </div>
 
+        <div className="space-y-2">
+          <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Reason (optional)
+          </label>
+          <Input
+            type="text"
+            placeholder="e.g. Payment for design work"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+
         <Button
           variant="signal"
           className="w-full"
