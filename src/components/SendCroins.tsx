@@ -25,6 +25,7 @@ export default function SendCroins({ userId, onSent }: SendCroinsProps) {
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [sending, setSending] = useState(false);
+  const [reason, setReason] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const parsedAmount = parseInt(amount, 10);
