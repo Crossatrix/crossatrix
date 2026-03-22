@@ -199,6 +199,9 @@ export default function Dashboard() {
           </Button>
         </motion.div>
 
+        {/* Send Croins */}
+        {user && <SendCroins userId={user.id} onSent={() => loadBalance(user.id)} />}
+
         {/* Transaction History */}
         {user && <TransactionHistory userId={user.id} />}
 
