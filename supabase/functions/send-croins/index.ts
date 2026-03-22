@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (recipient_email.toLowerCase() === sender.email?.toLowerCase()) {
+    if (recipient_email.toLowerCase() === senderEmail?.toLowerCase()) {
       return new Response(JSON.stringify({ error: "Cannot send Croins to yourself" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
