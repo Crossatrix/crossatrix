@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import TroublePage from "./pages/TroublePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
+import PwaInstallBanner from "./components/PwaInstallBanner";
 
 const queryClient = new QueryClient();
 
