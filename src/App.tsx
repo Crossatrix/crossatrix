@@ -25,6 +25,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <PwaInstallBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
