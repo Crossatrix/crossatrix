@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const authHeader = req.headers.get("authorization");
+    const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
         status: 401,
@@ -24,23 +24,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the sender
+    // Verify the sender using getClaims
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { authorization: authHeader } },
+      global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user: senderUser }, error: userError } = await userClient.auth.getUser();
-    if (userError || !senderUser) {
-      console.error("Auth error:", userError);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      console.error("Auth error:", claimsError);
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const senderId = senderUser.id;
-    const senderEmail = senderUser.email;
+    const senderId = claimsData.claims.sub as string;
+    const senderEmail = claimsData.claims.email as string;
 
     const { recipient_email, amount, reason } = await req.json();
     const reasonSuffix = reason && typeof reason === "string" ? ` — ${reason.trim()}` : "";
