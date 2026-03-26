@@ -17,30 +17,30 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Verify the sender using getClaims
+    // Verify the sender
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { authorization: authHeader } },
     });
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+
+    const { data: { user: senderUser }, error: userError } = await userClient.auth.getUser();
+    if (userError || !senderUser) {
+      console.error("Auth error:", userError);
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const senderId = claimsData.claims.sub as string;
-    const senderEmail = claimsData.claims.email as string;
+    const senderId = senderUser.id;
+    const senderEmail = senderUser.email;
 
     const { recipient_email, amount, reason } = await req.json();
     const reasonSuffix = reason && typeof reason === "string" ? ` — ${reason.trim()}` : "";
@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
     // Find recipient by email using admin API
     const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) {
+      console.error("List users error:", listError);
       return new Response(JSON.stringify({ error: "Failed to look up recipient" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
