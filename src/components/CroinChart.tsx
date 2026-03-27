@@ -34,18 +34,20 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
     const { data: prices } = await supabase
       .from("croin_price_history")
       .select("price, created_at")
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(50);
 
     if (prices) {
       setData(
-        prices.map((p) => ({
-          time: new Date(p.created_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          price: Number(p.price),
-        }))
+        [...prices]
+          .reverse()
+          .map((p) => ({
+            time: new Date(p.created_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            price: Number(p.price),
+          }))
       );
     }
   };
