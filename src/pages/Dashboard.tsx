@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import TransactionHistory from "@/components/TransactionHistory";
 import CroinChart from "@/components/CroinChart";
 import SendCroins from "@/components/SendCroins";
+import SetBalance from "@/components/SetBalance";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
@@ -198,6 +199,9 @@ export default function Dashboard() {
             {saving ? "Saving…" : "Save IDs"}
           </Button>
         </motion.div>
+
+        {/* Admin Set Balance */}
+        {user && <SetBalance userId={user.id} userEmail={user.email} onBalanceSet={() => loadBalance(user.id)} />}
 
         {/* Send Croins */}
         {user && <SendCroins userId={user.id} onSent={() => loadBalance(user.id)} />}
