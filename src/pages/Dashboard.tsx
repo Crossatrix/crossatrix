@@ -10,6 +10,7 @@ import TransactionHistory from "@/components/TransactionHistory";
 import CroinChart from "@/components/CroinChart";
 import SendCroins from "@/components/SendCroins";
 import SetBalance from "@/components/SetBalance";
+import BalanceNotifications from "@/components/BalanceNotifications";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
