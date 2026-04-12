@@ -10,6 +10,7 @@ import TransactionHistory from "@/components/TransactionHistory";
 import CroinChart from "@/components/CroinChart";
 import SendCroins from "@/components/SendCroins";
 import SetBalance from "@/components/SetBalance";
+import BalanceNotifications from "@/components/BalanceNotifications";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
@@ -134,8 +135,11 @@ export default function Dashboard() {
                 ¢{croinBalance.toLocaleString()}
               </p>
             </div>
-            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary">¢</span>
+            <div className="flex items-center gap-2">
+              <BalanceNotifications userId={user!.id} onBalanceChange={() => loadBalance(user!.id)} />
+              <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <span className="text-2xl font-bold text-primary">¢</span>
+              </div>
             </div>
           </div>
         </motion.div>
