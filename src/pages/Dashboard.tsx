@@ -135,8 +135,11 @@ export default function Dashboard() {
                 ¢{croinBalance.toLocaleString()}
               </p>
             </div>
-            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary">¢</span>
+            <div className="flex items-center gap-2">
+              <BalanceNotifications userId={user!.id} onBalanceChange={() => loadBalance(user!.id)} />
+              <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <span className="text-2xl font-bold text-primary">¢</span>
+              </div>
             </div>
           </div>
         </motion.div>
