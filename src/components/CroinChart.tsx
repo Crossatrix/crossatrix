@@ -229,6 +229,33 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
           </div>
         </div>
       )}
+
+      {isOwner && (
+        <div className="mt-4 space-y-3 pt-3 border-t border-border">
+          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Set Price Directly
+          </span>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="e.g. 5.00"
+              value={customPrice}
+              onChange={(e) => setCustomPrice(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleSetPrice}
+              disabled={loading}
+            >
+              <Target className="h-4 w-4" /> Set
+            </Button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
