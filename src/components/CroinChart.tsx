@@ -29,7 +29,9 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
   const [data, setData] = useState<PricePoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [magnitude, setMagnitude] = useState(0.05);
+  const [customPrice, setCustomPrice] = useState("");
   const isAdmin = userEmail === "cross.a.trix.owner@hotmail.com";
+  const isOwner = userEmail === "cross.a.trix.owner@hotmail.com";
 
   const fetchPrices = async () => {
     const { data: prices } = await supabase
@@ -92,6 +94,29 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
       }
     } catch {
       toast.error("Failed to update price");
+    }
+    setLoading(false);
+  };
+
+  const handleSetPrice = async () => {
+    const price = parseFloat(customPrice);
+    if (isNaN(price) || price < 0.01) {
+      toast.error("Enter a valid price (≥ 0.01)");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("croin-price", {
+        body: { action: "set", price },
+      });
+      if (error) {
+        toast.error("Failed to set price");
+      } else {
+        toast.success(`Price set to ${result.new_price}`);
+        setCustomPrice("");
+      }
+    } catch {
+      toast.error("Failed to set price");
     }
     setLoading(false);
   };
