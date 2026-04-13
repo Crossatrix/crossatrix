@@ -9,8 +9,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Target } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 interface PricePoint {
   time: string;
@@ -28,7 +29,9 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
   const [data, setData] = useState<PricePoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [magnitude, setMagnitude] = useState(0.05);
+  const [customPrice, setCustomPrice] = useState("");
   const isAdmin = userEmail === "cross.a.trix.owner@hotmail.com";
+  const isOwner = userEmail === "cross.a.trix.owner@hotmail.com";
 
   const fetchPrices = async () => {
     const { data: prices } = await supabase
@@ -91,6 +94,29 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
       }
     } catch {
       toast.error("Failed to update price");
+    }
+    setLoading(false);
+  };
+
+  const handleSetPrice = async () => {
+    const price = parseFloat(customPrice);
+    if (isNaN(price) || price < 0.01) {
+      toast.error("Enter a valid price (≥ 0.01)");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("croin-price", {
+        body: { action: "set", price },
+      });
+      if (error) {
+        toast.error("Failed to set price");
+      } else {
+        toast.success(`Price set to ${result.new_price}`);
+        setCustomPrice("");
+      }
+    } catch {
+      toast.error("Failed to set price");
     }
     setLoading(false);
   };
@@ -199,6 +225,33 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
               disabled={loading}
             >
               <TrendingDown className="h-4 w-4" /> Push Down
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isOwner && (
+        <div className="mt-4 space-y-3 pt-3 border-t border-border">
+          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Set Price Directly
+          </span>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="e.g. 5.00"
+              value={customPrice}
+              onChange={(e) => setCustomPrice(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleSetPrice}
+              disabled={loading}
+            >
+              <Target className="h-4 w-4" /> Set
             </Button>
           </div>
         </div>
