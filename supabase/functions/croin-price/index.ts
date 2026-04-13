@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { action, magnitude } = await req.json();
+    const { action, magnitude, price: setPrice } = await req.json();
 
     // Get latest price
     const { data: latest } = await supabase
@@ -56,20 +56,28 @@ Deno.serve(async (req) => {
       .single();
 
     const currentPrice = Number(latest?.price ?? 1);
-
-    // Use magnitude (0.01 to 1.00) if provided, otherwise random 0.01-0.05
-    const change = typeof magnitude === "number" && magnitude > 0
-      ? Math.round(magnitude * 100) / 100
-      : Math.round((Math.random() * 4 + 1)) / 100;
     let newPrice: number;
 
-    if (action === "up") {
-      newPrice = Math.round((currentPrice + change) * 100) / 100;
-    } else if (action === "down") {
-      newPrice = Math.max(0.01, Math.round((currentPrice - change) * 100) / 100);
+    if (action === "set") {
+      if (typeof setPrice !== "number" || setPrice < 0.01) {
+        return new Response(
+          JSON.stringify({ error: "price must be a number >= 0.01" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      newPrice = Math.round(setPrice * 100) / 100;
+    } else if (action === "up" || action === "down") {
+      const change = typeof magnitude === "number" && magnitude > 0
+        ? Math.round(magnitude * 100) / 100
+        : Math.round((Math.random() * 4 + 1)) / 100;
+      if (action === "up") {
+        newPrice = Math.round((currentPrice + change) * 100) / 100;
+      } else {
+        newPrice = Math.max(0.01, Math.round((currentPrice - change) * 100) / 100);
+      }
     } else {
       return new Response(
-        JSON.stringify({ error: "action must be 'up' or 'down'" }),
+        JSON.stringify({ error: "action must be 'up', 'down', or 'set'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
