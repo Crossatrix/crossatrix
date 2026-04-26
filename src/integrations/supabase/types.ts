@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          icon: string
+          id: string
+          kind: string
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          icon?: string
+          id?: string
+          kind?: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          icon?: string
+          id?: string
+          kind?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
