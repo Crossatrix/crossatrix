@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      bug_apps: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          versions: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          versions?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          versions?: string[]
+        }
+        Relationships: []
+      }
+      bug_reports: {
+        Row: {
+          app: string
+          app_version: string
+          created_at: string
+          description: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app: string
+          app_version?: string
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app?: string
+          app_version?: string
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       croin_price_history: {
         Row: {
           changed_by: string
