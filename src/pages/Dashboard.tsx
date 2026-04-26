@@ -146,74 +146,88 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Croin Trading Chart */}
-        <CroinChart userEmail={user?.email} />
+        {/* Tabs */}
+        <Tabs defaultValue="wallet" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="wallet">Wallet</TabsTrigger>
+            <TabsTrigger value="other">Other Stuff</TabsTrigger>
+          </TabsList>
 
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...transition, delay: 0.1 }}
-          className="text-2xl font-semibold tracking-tight-brand text-foreground mb-2"
-        >
-          Link Your Services
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ...transition, delay: 0.15 }}
-          className="text-sm text-muted-foreground mb-8"
-        >
-          Enter your IDs to connect Cross-Chat and Crossi-AI to your Crossatrix account.
-        </motion.p>
+          <TabsContent value="wallet" className="space-y-0">
+            {/* Croin Trading Chart */}
+            <CroinChart userEmail={user?.email} />
 
-        {/* ID Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...transition, delay: 0.2 }}
-          className="p-6 rounded-2xl border border-border bg-card shadow-vault space-y-6"
-        >
-          <div className="space-y-2">
-            <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-              Cross-Chat ID
-            </label>
-            <Input
-              placeholder="Enter your Cross-Chat ID"
-              value={crossChatId}
-              onChange={(e) => setCrossChatId(e.target.value)}
-            />
-          </div>
+            {/* Title */}
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...transition, delay: 0.1 }}
+              className="text-2xl font-semibold tracking-tight-brand text-foreground mb-2"
+            >
+              Link Your Services
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ ...transition, delay: 0.15 }}
+              className="text-sm text-muted-foreground mb-8"
+            >
+              Enter your IDs to connect Cross-Chat and Crossi-AI to your Crossatrix account.
+            </motion.p>
 
-          <div className="space-y-2">
-            <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-              Crossi-AI ID
-            </label>
-            <Input
-              placeholder="Enter your Crossi-AI ID"
-              value={crossiAiId}
-              onChange={(e) => setCrossiAiId(e.target.value)}
-            />
-          </div>
+            {/* ID Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...transition, delay: 0.2 }}
+              className="p-6 rounded-2xl border border-border bg-card shadow-vault space-y-6"
+            >
+              <div className="space-y-2">
+                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  Cross-Chat ID
+                </label>
+                <Input
+                  placeholder="Enter your Cross-Chat ID"
+                  value={crossChatId}
+                  onChange={(e) => setCrossChatId(e.target.value)}
+                />
+              </div>
 
-          <Button
-            variant="signal"
-            className="w-full"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving…" : "Save IDs"}
-          </Button>
-        </motion.div>
+              <div className="space-y-2">
+                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  Crossi-AI ID
+                </label>
+                <Input
+                  placeholder="Enter your Crossi-AI ID"
+                  value={crossiAiId}
+                  onChange={(e) => setCrossiAiId(e.target.value)}
+                />
+              </div>
 
-        {/* Admin Set Balance */}
-        {user && <SetBalance userId={user.id} userEmail={user.email} onBalanceSet={() => loadBalance(user.id)} />}
+              <Button
+                variant="signal"
+                className="w-full"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Save IDs"}
+              </Button>
+            </motion.div>
 
-        {/* Send Croins */}
-        {user && <SendCroins userId={user.id} onSent={() => loadBalance(user.id)} />}
+            {/* Admin Set Balance */}
+            {user && <SetBalance userId={user.id} userEmail={user.email} onBalanceSet={() => loadBalance(user.id)} />}
 
-        {/* Transaction History */}
-        {user && <TransactionHistory userId={user.id} />}
+            {/* Send Croins */}
+            {user && <SendCroins userId={user.id} onSent={() => loadBalance(user.id)} />}
+
+            {/* Transaction History */}
+            {user && <TransactionHistory userId={user.id} />}
+          </TabsContent>
+
+          <TabsContent value="other">
+            <OtherStuff userEmail={user?.email} />
+          </TabsContent>
+        </Tabs>
 
         {/* User info */}
         <motion.div
