@@ -12,6 +12,7 @@ import SendCroins from "@/components/SendCroins";
 import SetBalance from "@/components/SetBalance";
 import BalanceNotifications from "@/components/BalanceNotifications";
 import OtherStuff from "@/components/OtherStuff";
+import News from "@/components/News";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
@@ -148,8 +149,9 @@ export default function Dashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="wallet" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="wallet">Wallet</TabsTrigger>
+            <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="other">Other Stuff</TabsTrigger>
           </TabsList>
 
@@ -222,6 +224,10 @@ export default function Dashboard() {
 
             {/* Transaction History */}
             {user && <TransactionHistory userId={user.id} />}
+          </TabsContent>
+
+          <TabsContent value="news">
+            <News userEmail={user?.email} />
           </TabsContent>
 
           <TabsContent value="other">
