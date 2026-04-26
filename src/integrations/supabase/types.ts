@@ -89,6 +89,42 @@ export type Database = {
         }
         Relationships: []
       }
+      newspaper_issues: {
+        Row: {
+          content: string
+          cover_url: string | null
+          created_at: string
+          created_by: string
+          id: string
+          published: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          cover_url?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          published?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          published?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       owner_links: {
         Row: {
           created_at: string
