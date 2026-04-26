@@ -149,8 +149,9 @@ export default function Dashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="wallet" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="wallet">Wallet</TabsTrigger>
+            <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="other">Other Stuff</TabsTrigger>
           </TabsList>
 
