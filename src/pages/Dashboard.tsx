@@ -226,6 +226,10 @@ export default function Dashboard() {
             {user && <TransactionHistory userId={user.id} />}
           </TabsContent>
 
+          <TabsContent value="news">
+            <News userEmail={user?.email} />
+          </TabsContent>
+
           <TabsContent value="other">
             <OtherStuff userEmail={user?.email} />
           </TabsContent>
