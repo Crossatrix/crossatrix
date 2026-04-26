@@ -7,6 +7,8 @@ import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import TroublePage from "./pages/TroublePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import BugPage from "./pages/BugPage";
+import BugAppsPage from "./pages/BugAppsPage";
 import NotFound from "./pages/NotFound";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 
@@ -23,6 +25,9 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trouble" element={<TroublePage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/bug" element={<BugPage />} />
+          <Route path="/Bug" element={<BugPage />} />
+          <Route path="/bugapps" element={<BugAppsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <PwaInstallBanner />
