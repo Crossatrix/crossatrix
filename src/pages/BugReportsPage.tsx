@@ -26,6 +26,7 @@ interface BugReport {
   title: string;
   description: string;
   status: string;
+  reward_amount: number;
   created_at: string;
 }
 
@@ -34,6 +35,8 @@ export default function BugReportsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [reports, setReports] = useState<BugReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rewardInputs, setRewardInputs] = useState<Record<string, string>>({});
+  const [rewardingId, setRewardingId] = useState<string | null>(null);
 
   const load = async () => {
     const { data, error } = await supabase
