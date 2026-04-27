@@ -209,6 +209,36 @@ export default function BugReportsPage() {
                     {r.user_id.slice(0, 8)}
                   </span>
                 </div>
+                <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 flex-wrap">
+                  <Coins className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                    Reward
+                  </span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5000}
+                    placeholder="1–5000"
+                    value={rewardInputs[r.id] ?? ""}
+                    onChange={(e) =>
+                      setRewardInputs((p) => ({ ...p, [r.id]: e.target.value }))
+                    }
+                    className="h-8 w-28"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => reward(r)}
+                    disabled={rewardingId === r.id}
+                    className="h-8"
+                  >
+                    {rewardingId === r.id ? "Sending…" : "Send ¢"}
+                  </Button>
+                  {r.reward_amount > 0 && (
+                    <span className="text-xs font-mono text-primary ml-auto">
+                      Paid: {r.reward_amount} ¢
+                    </span>
+                  )}
+                </div>
               </article>
             ))}
           </div>
