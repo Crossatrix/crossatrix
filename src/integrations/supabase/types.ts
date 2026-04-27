@@ -51,6 +51,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          reward_amount: number
           status: string
           title: string
           updated_at: string
@@ -62,6 +63,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          reward_amount?: number
           status?: string
           title: string
           updated_at?: string
@@ -73,6 +75,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          reward_amount?: number
           status?: string
           title?: string
           updated_at?: string
