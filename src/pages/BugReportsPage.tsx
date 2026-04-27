@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,11 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Bug, Trash2 } from "lucide-react";
+import { Bug, Trash2, Coins } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const OWNER_EMAIL = "cross.a.trix.owner@hotmail.com";
 const STATUSES = ["open", "in_progress", "fixed", "wontfix"] as const;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 interface BugReport {
   id: string;
