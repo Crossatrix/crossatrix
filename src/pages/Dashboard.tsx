@@ -14,6 +14,7 @@ import BalanceNotifications from "@/components/BalanceNotifications";
 import OtherStuff from "@/components/OtherStuff";
 import News from "@/components/News";
 import Newspaper from "@/components/Newspaper";
+import ShareButton from "@/components/ShareButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
@@ -223,6 +224,9 @@ export default function Dashboard() {
 
             {/* Send Croins */}
             {user && <SendCroins userId={user.id} onSent={() => loadBalance(user.id)} />}
+
+            {/* Share & Earn */}
+            {user && <ShareButton userId={user.id} />}
 
             {/* Transaction History */}
             {user && <TransactionHistory userId={user.id} />}
