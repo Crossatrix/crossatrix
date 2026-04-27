@@ -9,6 +9,8 @@ import TroublePage from "./pages/TroublePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import BugPage from "./pages/BugPage";
 import BugAppsPage from "./pages/BugAppsPage";
+import BugReportsPage from "./pages/BugReportsPage";
+import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 
@@ -28,6 +30,10 @@ const App = () => (
           <Route path="/bug" element={<BugPage />} />
           <Route path="/Bug" element={<BugPage />} />
           <Route path="/bugapps" element={<BugAppsPage />} />
+          <Route path="/bugreports" element={<BugReportsPage />} />
+          <Route path="/Bugreports" element={<BugReportsPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/News" element={<NewsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <PwaInstallBanner />
