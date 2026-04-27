@@ -1,0 +1,1 @@
+ALTER TABLE public.bug_reports ADD COLUMN IF NOT EXISTS reward_amount integer NOT NULL DEFAULT 0;

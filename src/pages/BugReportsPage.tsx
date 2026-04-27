@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,11 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Bug, Trash2 } from "lucide-react";
+import { Bug, Trash2, Coins } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const OWNER_EMAIL = "cross.a.trix.owner@hotmail.com";
 const STATUSES = ["open", "in_progress", "fixed", "wontfix"] as const;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 interface BugReport {
   id: string;
@@ -24,6 +26,7 @@ interface BugReport {
   title: string;
   description: string;
   status: string;
+  reward_amount: number;
   created_at: string;
 }
 
@@ -32,6 +35,8 @@ export default function BugReportsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [reports, setReports] = useState<BugReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rewardInputs, setRewardInputs] = useState<Record<string, string>>({});
+  const [rewardingId, setRewardingId] = useState<string | null>(null);
 
   const load = async () => {
     const { data, error } = await supabase
@@ -78,6 +83,52 @@ export default function BugReportsPage() {
     }
     setReports((prev) => prev.filter((r) => r.id !== id));
     toast.success("Deleted");
+  };
+
+  const reward = async (report: BugReport) => {
+    const raw = rewardInputs[report.id] ?? "";
+    const amount = parseInt(raw, 10);
+    if (!Number.isFinite(amount) || amount < 1 || amount > 5000) {
+      toast.error("Enter an amount between 1 and 5000 ¢");
+      return;
+    }
+    setRewardingId(report.id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/croins`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "credit",
+          user_id: report.user_id,
+          amount,
+          description: `Bug reward: ${report.title}`,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to send reward");
+
+      const newTotal = (report.reward_amount ?? 0) + amount;
+      const { error: upErr } = await supabase
+        .from("bug_reports")
+        .update({ reward_amount: newTotal })
+        .eq("id", report.id);
+      if (upErr) throw upErr;
+
+      setReports((prev) =>
+        prev.map((r) => (r.id === report.id ? { ...r, reward_amount: newTotal } : r))
+      );
+      setRewardInputs((prev) => ({ ...prev, [report.id]: "" }));
+      toast.success(`Sent ${amount} ¢`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Reward failed");
+    } finally {
+      setRewardingId(null);
+    }
   };
 
   if (!user) return null;
@@ -157,6 +208,36 @@ export default function BugReportsPage() {
                   <span className="text-xs font-mono text-muted-foreground ml-auto truncate">
                     {r.user_id.slice(0, 8)}
                   </span>
+                </div>
+                <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 flex-wrap">
+                  <Coins className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                    Reward
+                  </span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5000}
+                    placeholder="1–5000"
+                    value={rewardInputs[r.id] ?? ""}
+                    onChange={(e) =>
+                      setRewardInputs((p) => ({ ...p, [r.id]: e.target.value }))
+                    }
+                    className="h-8 w-28"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => reward(r)}
+                    disabled={rewardingId === r.id}
+                    className="h-8"
+                  >
+                    {rewardingId === r.id ? "Sending…" : "Send ¢"}
+                  </Button>
+                  {r.reward_amount > 0 && (
+                    <span className="text-xs font-mono text-primary ml-auto">
+                      Paid: {r.reward_amount} ¢
+                    </span>
+                  )}
                 </div>
               </article>
             ))}
