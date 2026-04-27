@@ -85,6 +85,52 @@ export default function BugReportsPage() {
     toast.success("Deleted");
   };
 
+  const reward = async (report: BugReport) => {
+    const raw = rewardInputs[report.id] ?? "";
+    const amount = parseInt(raw, 10);
+    if (!Number.isFinite(amount) || amount < 1 || amount > 5000) {
+      toast.error("Enter an amount between 1 and 5000 ¢");
+      return;
+    }
+    setRewardingId(report.id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/croins`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "credit",
+          user_id: report.user_id,
+          amount,
+          description: `Bug reward: ${report.title}`,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to send reward");
+
+      const newTotal = (report.reward_amount ?? 0) + amount;
+      const { error: upErr } = await supabase
+        .from("bug_reports")
+        .update({ reward_amount: newTotal })
+        .eq("id", report.id);
+      if (upErr) throw upErr;
+
+      setReports((prev) =>
+        prev.map((r) => (r.id === report.id ? { ...r, reward_amount: newTotal } : r))
+      );
+      setRewardInputs((prev) => ({ ...prev, [report.id]: "" }));
+      toast.success(`Sent ${amount} ¢`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Reward failed");
+    } finally {
+      setRewardingId(null);
+    }
+  };
+
   if (!user) return null;
   if (!isOwner) {
     return (
