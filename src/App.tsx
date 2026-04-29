@@ -13,6 +13,10 @@ import BugReportsPage from "./pages/BugReportsPage";
 import NewsPage from "./pages/NewsPage";
 import SharePage from "./pages/SharePage";
 import InfoPage from "./pages/InfoPage";
+import NewSchoolPage from "./pages/school/NewSchoolPage";
+import TeacherPage from "./pages/school/TeacherPage";
+import PrincipalPage from "./pages/school/PrincipalPage";
+import SchoolsAdminPage from "./pages/school/SchoolsAdminPage";
 import NotFound from "./pages/NotFound";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 
@@ -42,6 +46,10 @@ const App = () => (
           <Route path="/Share" element={<SharePage />} />
           <Route path="/info" element={<InfoPage />} />
           <Route path="/Info" element={<InfoPage />} />
+          <Route path="/school/new-school" element={<NewSchoolPage />} />
+          <Route path="/school/teacher" element={<TeacherPage />} />
+          <Route path="/school/principal" element={<PrincipalPage />} />
+          <Route path="/school/admin" element={<SchoolsAdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <PwaInstallBanner />
