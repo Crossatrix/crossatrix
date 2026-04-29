@@ -43,7 +43,9 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: `Bearer ${data.session.access_token}` } },
     });
 
-    const [profileRes, walletRes] = await Promise.all([
+    const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    const [profileRes, walletRes, memberRes] = await Promise.all([
       authedClient
         .from("profiles")
         .select("cross_chat_id, crossi_ai_id")
@@ -54,7 +56,14 @@ Deno.serve(async (req) => {
         .select("balance")
         .eq("user_id", data.user.id)
         .maybeSingle(),
+      adminClient
+        .from("school_members")
+        .select("role, school_id, username")
+        .eq("user_id", data.user.id)
+        .maybeSingle(),
     ]);
+
+    const role = memberRes.data?.role || null;
 
     return new Response(
       JSON.stringify({
@@ -66,6 +75,11 @@ Deno.serve(async (req) => {
         cross_chat_id: profileRes.data?.cross_chat_id || null,
         crossi_ai_id: profileRes.data?.crossi_ai_id || null,
         croins_balance: walletRes.data?.balance ?? 0,
+        is_student: role === "student",
+        is_teacher: role === "teacher",
+        is_principal: role === "principal",
+        school_role: role,
+        school_id: memberRes.data?.school_id || null,
         access_token: data.session.access_token,
         expires_at: data.session.expires_at,
       }),
