@@ -102,7 +102,11 @@ Deno.serve(async (req) => {
 
     // ----- All actions below require auth -----
     const caller = await getCaller(req);
-    if (!caller) return json({ error: "Unauthorized" }, 401);
+    if (!caller) {
+      // my_context is safe to call unauthenticated → return empty member
+      if (action === "my_context") return json({ member: null });
+      return json({ error: "Unauthorized" }, 401);
+    }
 
     const { data: callerMember } = await admin
       .from("school_members")
