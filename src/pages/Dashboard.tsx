@@ -16,6 +16,7 @@ import News from "@/components/News";
 import Newspaper from "@/components/Newspaper";
 import ShareButton from "@/components/ShareButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useStudentRestrictions } from "@/hooks/useStudentRestrictions";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
@@ -27,6 +28,13 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [croinBalance, setCroinBalance] = useState<number>(0);
   const navigate = useNavigate();
+  const restr = useStudentRestrictions(user?.id);
+  const visibleTabs = [
+    { v: "wallet", label: "Wallet", show: !restr.croins },
+    { v: "news", label: "News", show: !restr.news },
+    { v: "paper", label: "Paper", show: !restr.newspaper },
+    { v: "other", label: "Other", show: !restr.other },
+  ].filter((t) => t.show);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -150,12 +158,11 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue="wallet" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="wallet">Wallet</TabsTrigger>
-            <TabsTrigger value="news">News</TabsTrigger>
-            <TabsTrigger value="paper">Paper</TabsTrigger>
-            <TabsTrigger value="other">Other</TabsTrigger>
+        <Tabs defaultValue={visibleTabs[0]?.v || "wallet"} className="w-full">
+          <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${visibleTabs.length || 1}, minmax(0, 1fr))` }}>
+            {visibleTabs.map((t) => (
+              <TabsTrigger key={t.v} value={t.v}>{t.label}</TabsTrigger>
+            ))}
           </TabsList>
 
           <TabsContent value="wallet" className="space-y-0">
