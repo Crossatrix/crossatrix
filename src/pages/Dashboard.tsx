@@ -167,6 +167,7 @@ export default function Dashboard() {
             </div>
           </div>
         </motion.div>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue={visibleTabs[0]?.v || "wallet"} className="w-full">
