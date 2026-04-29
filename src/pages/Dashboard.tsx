@@ -50,6 +50,16 @@ export default function Dashboard() {
       else {
         loadProfile(session.user.id);
         loadBalance(session.user.id);
+        // route school members to their pages
+        supabase
+          .from("school_members")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.role === "principal") navigate("/school/principal");
+            else if (data?.role === "teacher") navigate("/school/teacher");
+          });
       }
     });
 
