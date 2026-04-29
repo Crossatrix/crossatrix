@@ -189,7 +189,12 @@ export default function AuthPage() {
         )}
 
         {/* Footer */}
-        <div className="mt-12 pt-6 border-t border-border">
+        <div className="mt-12 pt-6 border-t border-border space-y-2">
+          <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+            <button type="button" onClick={() => navigate("/school/new-school")} className="hover:text-primary transition-brand">Register a school</button>
+            <span>•</span>
+            <button type="button" onClick={() => navigate("/school/teacher")} className="hover:text-primary transition-brand">Teacher / Student login</button>
+          </div>
           <p className="text-xs text-muted-foreground/50 font-mono text-center">
             crossatrix.identity.v1 • encrypted at rest
           </p>

@@ -83,6 +83,67 @@ export type Database = {
         }
         Relationships: []
       }
+      class_students: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          student_user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          student_user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          student_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_subjects: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          subject: string
+          teacher_user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          subject: string
+          teacher_user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          teacher_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_subjects_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       croin_price_history: {
         Row: {
           changed_by: string
@@ -311,6 +372,144 @@ export type Database = {
         }
         Relationships: []
       }
+      school_classes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          school_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          school_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_classes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          role: string
+          school_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          role: string
+          school_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          role?: string
+          school_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_members_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          approved: boolean
+          created_at: string
+          id: string
+          name: string
+          pool_balance: number
+          principal_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          pool_balance?: number
+          principal_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          pool_balance?: number
+          principal_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_restrictions: {
+        Row: {
+          class_id: string
+          id: string
+          restrict_croins: boolean
+          restrict_news: boolean
+          restrict_newspaper: boolean
+          restrict_other: boolean
+          student_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          id?: string
+          restrict_croins?: boolean
+          restrict_news?: boolean
+          restrict_newspaper?: boolean
+          restrict_other?: boolean
+          student_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          id?: string
+          restrict_croins?: boolean
+          restrict_news?: boolean
+          restrict_newspaper?: boolean
+          restrict_other?: boolean
+          student_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_restrictions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallets: {
         Row: {
           balance: number
@@ -340,6 +539,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_school_role: { Args: { _uid: string }; Returns: string }
+      get_user_school_id: { Args: { _uid: string }; Returns: string }
+      is_in_class: { Args: { _class: string; _uid: string }; Returns: boolean }
+      is_owner_email: { Args: never; Returns: boolean }
+      is_principal_of: {
+        Args: { _school: string; _uid: string }
+        Returns: boolean
+      }
+      is_teacher_of_class: {
+        Args: { _class: string; _uid: string }
+        Returns: boolean
+      }
       simulate_croin_price: { Args: never; Returns: undefined }
     }
     Enums: {
