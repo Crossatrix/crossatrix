@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const ADMIN_EMAILS = [
   "cross.a.trix.owner@hotmail.com",
   "moritz.loeseke7@gmail.com",
-  "Ben.froehleke@gmx.de",
+  "ben.froehleke@gmx.de",
 ];
 
 interface SetBalanceProps {
