@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function Newspaper({ userEmail, userId }: Props) {
-  const isOwner = userEmail === OWNER_EMAIL;
+  const isOwner = !!userEmail && OWNER_EMAILS.includes(userEmail.toLowerCase());
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
 
