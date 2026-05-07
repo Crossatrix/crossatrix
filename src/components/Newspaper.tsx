@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Trash2, Plus, Image as ImageIcon, Paperclip, Link as LinkIcon, Pencil, Save, X } from "lucide-react";
 import { renderContent } from "@/lib/newspaperRender";
 
-const OWNER_EMAIL = "cross.a.trix.owner@hotmail.com";
+const OWNER_EMAILS = ["cross.a.trix.owner@hotmail.com", "moritz.loeseke@gmail.com"];
 
 interface Issue {
   id: string;
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function Newspaper({ userEmail, userId }: Props) {
-  const isOwner = userEmail === OWNER_EMAIL;
+  const isOwner = !!userEmail && OWNER_EMAILS.includes(userEmail.toLowerCase());
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
 
