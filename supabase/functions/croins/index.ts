@@ -22,18 +22,28 @@ Deno.serve(async (req) => {
       req.headers.get("authorization") || req.headers.get("Authorization");
 
     let authorized = false;
+    let authError: string | null = null;
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data, error } = await userClient.auth.getClaims(token);
-      if (!error && data?.claims?.sub) authorized = true;
+      try {
+        const { data, error } = await userClient.auth.getClaims(token);
+        if (!error && data?.claims?.sub) {
+          authorized = true;
+        } else if (error) {
+          authError = error.message;
+        }
+      } catch (e: any) {
+        authError = e?.message ?? "Invalid token";
+      }
     }
 
     if (!authorized) {
+      const expired = authError?.toLowerCase().includes("expired");
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: expired ? "JWT expired" : "Unauthorized", code: expired ? "jwt_expired" : "unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

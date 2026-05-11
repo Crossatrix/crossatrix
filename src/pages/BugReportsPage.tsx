@@ -94,8 +94,13 @@ export default function BugReportsPage() {
     }
     setRewardingId(report.id);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      let { data: sessionData } = await supabase.auth.getSession();
+      let token = sessionData.session?.access_token;
+      const expiresAt = sessionData.session?.expires_at ?? 0;
+      if (!token || expiresAt * 1000 - Date.now() < 60_000) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        token = refreshed.session?.access_token ?? token;
+      }
       const res = await fetch(`${SUPABASE_URL}/functions/v1/croins`, {
         method: "POST",
         headers: {
