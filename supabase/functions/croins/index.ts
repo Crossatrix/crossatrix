@@ -14,39 +14,10 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Authorize via user JWT
-    const authHeader =
-      req.headers.get("authorization") || req.headers.get("Authorization");
-
-    let authorized = false;
-    let authError: string | null = null;
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
-      const userClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      try {
-        const { data, error } = await userClient.auth.getClaims(token);
-        if (!error && data?.claims?.sub) {
-          authorized = true;
-        } else if (error) {
-          authError = error.message;
-        }
-      } catch (e: any) {
-        authError = e?.message ?? "Invalid token";
-      }
-    }
-
-    if (!authorized) {
-      const expired = authError?.toLowerCase().includes("expired");
-      return new Response(
-        JSON.stringify({ error: expired ? "JWT expired" : "Unauthorized", code: expired ? "jwt_expired" : "unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // NOTE: This function is intentionally OPEN — no auth check.
+    // Any caller can read or modify any wallet.
 
     const { action, user_id, amount, description } = await req.json();
 
@@ -57,7 +28,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // GET BALANCE
     if (action === "balance") {
       const { data: wallet } = await supabase
         .from("wallets")
@@ -71,7 +41,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // CREDIT or DEBIT
     if (action !== "credit" && action !== "debit") {
       return new Response(
         JSON.stringify({ error: "action must be 'balance', 'credit', or 'debit'" }),
@@ -86,14 +55,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Ensure wallet exists
     const { data: existingWallet } = await supabase
       .from("wallets")
       .select("balance")
       .eq("user_id", user_id)
       .maybeSingle();
 
-    let currentBalance = existingWallet?.balance ?? 0;
+    const currentBalance = existingWallet?.balance ?? 0;
 
     if (!existingWallet) {
       await supabase.from("wallets").insert({ user_id, balance: 0 });
@@ -120,7 +88,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Log transaction
     await supabase.from("croin_transactions").insert({
       user_id,
       amount,
