@@ -15,19 +15,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const apiKey = Deno.env.get("CROINS_API_KEY");
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Authorize: either valid CROINS_API_KEY OR a valid user JWT
-    const providedKey =
-      req.headers.get("x-api-key") || req.headers.get("X-Api-Key");
+    // Authorize via user JWT
     const authHeader =
       req.headers.get("authorization") || req.headers.get("Authorization");
 
     let authorized = false;
-    if (apiKey && providedKey && providedKey === apiKey) {
-      authorized = true;
-    } else if (authHeader?.startsWith("Bearer ")) {
+    if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
