@@ -137,9 +137,14 @@ export default function Dashboard() {
               Session Active
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-muted-foreground">
+              Settings
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
+              Sign Out
+            </Button>
+          </div>
         </motion.div>
 
         {/* Croins Balance */}

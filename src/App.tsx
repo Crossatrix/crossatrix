@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import TroublePage from "./pages/TroublePage";
+import SettingsPage from "./pages/SettingsPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import BugPage from "./pages/BugPage";
 import BugAppsPage from "./pages/BugAppsPage";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/" element={<AuthPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trouble" element={<TroublePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/bug" element={<BugPage />} />
           <Route path="/Bug" element={<BugPage />} />

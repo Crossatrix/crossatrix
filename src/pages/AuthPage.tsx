@@ -4,8 +4,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import TwoFactorChallenge from "@/components/TwoFactorChallenge";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
+
+async function callFn(name: string, body: Record<string, unknown> = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const r = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session?.access_token}`,
+      "Content-Type": "application/json",
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || "Request failed");
+  return d;
+}
 
 const PasswordStrength = ({ password }: { password: string }) => {
   const getStrength = (pw: string) => {
@@ -51,6 +68,8 @@ export default function AuthPage() {
   const [shake, setShake] = useState(false);
   const navigate = useNavigate();
 
+  const [twofaMethod, setTwofaMethod] = useState<"email" | "sms" | "file" | "face" | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -64,7 +83,10 @@ export default function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/dashboard");
+        // Check if 2FA required
+        const r = await callFn("twofa-challenge");
+        if (r.required) setTwofaMethod(r.method);
+        else navigate("/dashboard");
       }
     } catch (err: any) {
       setError(err.message || "An error occurred");
@@ -74,6 +96,16 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
+
+  if (twofaMethod) {
+    return (
+      <TwoFactorChallenge
+        method={twofaMethod}
+        onSuccess={() => navigate("/dashboard")}
+        onCancel={async () => { await supabase.auth.signOut(); setTwofaMethod(null); }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

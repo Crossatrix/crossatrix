@@ -8,3 +8,18 @@ verify_jwt = false
 
 [functions.send-croins]
 verify_jwt = false
+
+[functions.twofa-setup]
+verify_jwt = false
+
+[functions.twofa-verify-setup]
+verify_jwt = false
+
+[functions.twofa-challenge]
+verify_jwt = false
+
+[functions.twofa-verify]
+verify_jwt = false
+
+[functions.twofa-disable]
+verify_jwt = false

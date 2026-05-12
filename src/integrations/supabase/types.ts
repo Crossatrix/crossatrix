@@ -510,6 +510,75 @@ export type Database = {
           },
         ]
       }
+      user_2fa: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          face_descriptor: Json | null
+          id: string
+          method: string | null
+          phone: string | null
+          secret_key: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          face_descriptor?: Json | null
+          id?: string
+          method?: string | null
+          phone?: string | null
+          secret_key?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          face_descriptor?: Json | null
+          id?: string
+          method?: string | null
+          phone?: string | null
+          secret_key?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_2fa_challenges: {
+        Row: {
+          code_hash: string | null
+          consumed: boolean
+          created_at: string
+          expires_at: string
+          id: string
+          method: string
+          purpose: string
+          user_id: string
+        }
+        Insert: {
+          code_hash?: string | null
+          consumed?: boolean
+          created_at?: string
+          expires_at: string
+          id?: string
+          method: string
+          purpose?: string
+          user_id: string
+        }
+        Update: {
+          code_hash?: string | null
+          consumed?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          method?: string
+          purpose?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           balance: number
