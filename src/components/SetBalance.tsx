@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const ADMIN_EMAILS = [
-  "cross.a.trix.owner@hotmail.com",
-  "moritz.loeseke7@gmail.com",
   "ben.froehleke@gmx.de",
 ];
 
