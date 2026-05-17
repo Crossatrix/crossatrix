@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import TwoFactorChallenge from "@/components/TwoFactorChallenge";
+const TwoFactorChallenge = lazy(() => import("@/components/TwoFactorChallenge"));
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
