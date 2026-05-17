@@ -111,12 +111,14 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      <TwoFactorSetup
-        open={!!picker}
-        method={picker}
-        onClose={() => setPicker(null)}
-        onEnabled={() => user && loadTwofa(user.id)}
-      />
+      <Suspense fallback={null}>
+        <TwoFactorSetup
+          open={!!picker}
+          method={picker}
+          onClose={() => setPicker(null)}
+          onEnabled={() => user && loadTwofa(user.id)}
+        />
+      </Suspense>
     </div>
   );
 }
