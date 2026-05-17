@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import TwoFactorSetup from "@/components/TwoFactorSetup";
 import type { User } from "@supabase/supabase-js";
+
+const TwoFactorSetup = lazy(() => import("@/components/TwoFactorSetup"));
 
 type Method = "email" | "sms" | "file" | "face";
 
@@ -110,12 +111,14 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      <TwoFactorSetup
-        open={!!picker}
-        method={picker}
-        onClose={() => setPicker(null)}
-        onEnabled={() => user && loadTwofa(user.id)}
-      />
+      <Suspense fallback={null}>
+        <TwoFactorSetup
+          open={!!picker}
+          method={picker}
+          onClose={() => setPicker(null)}
+          onEnabled={() => user && loadTwofa(user.id)}
+        />
+      </Suspense>
     </div>
   );
 }
