@@ -99,11 +99,13 @@ export default function AuthPage() {
 
   if (twofaMethod) {
     return (
-      <TwoFactorChallenge
-        method={twofaMethod}
-        onSuccess={() => navigate("/dashboard")}
-        onCancel={async () => { await supabase.auth.signOut(); setTwofaMethod(null); }}
-      />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-primary glow-primary animate-pulse" /></div>}>
+        <TwoFactorChallenge
+          method={twofaMethod}
+          onSuccess={() => navigate("/dashboard")}
+          onCancel={async () => { await supabase.auth.signOut(); setTwofaMethod(null); }}
+        />
+      </Suspense>
     );
   }
 
