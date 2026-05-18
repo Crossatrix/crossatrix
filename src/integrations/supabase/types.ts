@@ -144,6 +144,74 @@ export type Database = {
           },
         ]
       }
+      croin_code_redemptions: {
+        Row: {
+          amount: number
+          code_id: string
+          id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          code_id: string
+          id?: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          code_id?: string
+          id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "croin_code_redemptions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "croin_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      croin_codes: {
+        Row: {
+          active: boolean
+          amount: number
+          code: string
+          created_at: string
+          created_by: string
+          id: string
+          max_uses: number
+          updated_at: string
+          uses: number
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          max_uses: number
+          updated_at?: string
+          uses?: number
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          max_uses?: number
+          updated_at?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       croin_price_history: {
         Row: {
           changed_by: string
