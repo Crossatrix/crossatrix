@@ -15,6 +15,7 @@ import OtherStuff from "@/components/OtherStuff";
 import News from "@/components/News";
 import Newspaper from "@/components/Newspaper";
 import ShareButton from "@/components/ShareButton";
+import RedeemCode from "@/components/RedeemCode";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStudentRestrictions } from "@/hooks/useStudentRestrictions";
 
@@ -251,6 +252,9 @@ export default function Dashboard() {
 
             {/* Share & Earn */}
             {user && <ShareButton userId={user.id} />}
+
+            {/* Redeem Code */}
+            {user && <RedeemCode userId={user.id} userEmail={user.email} />}
 
             {/* Transaction History */}
             {user && <TransactionHistory userId={user.id} />}
