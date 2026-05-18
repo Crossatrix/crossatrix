@@ -253,6 +253,9 @@ export default function Dashboard() {
             {/* Share & Earn */}
             {user && <ShareButton userId={user.id} />}
 
+            {/* Redeem Code */}
+            {user && <RedeemCode userId={user.id} userEmail={user.email} />}
+
             {/* Transaction History */}
             {user && <TransactionHistory userId={user.id} />}
           </TabsContent>
