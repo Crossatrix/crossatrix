@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
         access_token: data.session.access_token,
         expires_at: data.session.expires_at,
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("Auth error:", err);
