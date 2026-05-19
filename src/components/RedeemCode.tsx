@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Gift, Plus, Trash2, Copy, ShoppingCart } from "lucide-react";
+import { Gift, Plus, Trash2, Copy } from "lucide-react";
 
 const ADMINS = ["cross.a.trix.owner@hotmail.com", "moritz.loeseke7@gmail.com"];
 const CODE_RE = /^[a-z0-9]{4}-[a-z0-9]{4}--[a-z0-9]{4}-[a-z0-9]{4}$/i;
@@ -35,16 +35,6 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
   const [amount, setAmount] = useState("100");
   const [maxUses, setMaxUses] = useState("10");
   const [creating, setCreating] = useState(false);
-
-  // Buy code (any user)
-  const [buyAmount, setBuyAmount] = useState("100");
-  const [buyMaxUses, setBuyMaxUses] = useState("1");
-  const [buying, setBuying] = useState(false);
-  const [boughtCode, setBoughtCode] = useState<string | null>(null);
-
-  const buyAmt = Math.max(0, Math.min(1000, parseInt(buyAmount, 10) || 0));
-  const buyUses = Math.max(0, Math.min(100, parseInt(buyMaxUses, 10) || 0));
-  const buyCost = Math.ceil(buyAmt * buyUses * 1.05);
 
   const loadCodes = async () => {
     if (!isAdmin) return;
@@ -85,26 +75,6 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
       toast.error(e.message);
     } finally {
       setRedeeming(false);
-    }
-  };
-
-  const buy = async () => {
-    if (buyAmt < 1 || buyAmt > 1000) { toast.error("Amount must be 1–1000 ¢"); return; }
-    if (buyUses < 1 || buyUses > 100) { toast.error("Uses must be 1–100"); return; }
-    setBuying(true);
-    setBoughtCode(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("buy-code", {
-        body: { amount: buyAmt, max_uses: buyUses },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message || "Failed");
-      setBoughtCode(data.code);
-      toast.success(`Code purchased for ¢${data.cost}`);
-      if (isAdmin) loadCodes();
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setBuying(false);
     }
   };
 
@@ -172,59 +142,6 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
           {redeeming ? "…" : "Redeem"}
         </Button>
       </div>
-
-      <div className="mt-5 pt-4 border-t border-border space-y-3">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="h-4 w-4 text-primary" />
-          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            Buy a Code
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1 space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              ¢ per use (max 1000)
-            </label>
-            <Input
-              type="number"
-              min={1}
-              max={1000}
-              value={buyAmount}
-              onChange={(e) => setBuyAmount(e.target.value)}
-            />
-          </div>
-          <div className="flex-1 space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              Uses (max 100)
-            </label>
-            <Input
-              type="number"
-              min={1}
-              max={100}
-              value={buyMaxUses}
-              onChange={(e) => setBuyMaxUses(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between text-xs font-mono">
-          <span className="text-muted-foreground">
-            Cost: {buyAmt} × {buyUses} × 1.05
-          </span>
-          <span className="text-primary text-sm">¢{buyCost.toLocaleString()}</span>
-        </div>
-        <Button onClick={buy} disabled={buying || buyCost <= 0} variant="signal" className="w-full">
-          {buying ? "Purchasing…" : `Buy Code for ¢${buyCost.toLocaleString()}`}
-        </Button>
-        {boughtCode && (
-          <button
-            onClick={() => copy(boughtCode)}
-            className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-muted/20 border border-border text-xs font-mono text-foreground hover:text-primary"
-          >
-            <Copy className="h-3 w-3" /> {boughtCode}
-          </button>
-        )}
-      </div>
-
 
       {isAdmin && (
         <div className="mt-5 pt-4 border-t border-border space-y-3">
