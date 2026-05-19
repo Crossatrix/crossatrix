@@ -6,6 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-api-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ADMIN_EMAILS = [
+  "cross.a.trix.owner@hotmail.com",
+  "moritz.loeseke7@gmail.com",
+];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,10 +19,35 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // NOTE: This function is intentionally OPEN — no auth check.
-    // Any caller can read or modify any wallet.
+    // Require authenticated caller
+    const authHeader =
+      req.headers.get("authorization") || req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Not authenticated" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const callerId = claimsData.claims.sub as string;
+    const callerEmail = (claimsData.claims.email as string | undefined)?.toLowerCase();
+    const isAdmin = !!callerEmail && ADMIN_EMAILS.includes(callerEmail);
 
     const { action, user_id, amount, description } = await req.json();
 
@@ -25,6 +55,14 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "user_id and action are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Only admins can act on other users' wallets.
+    if (user_id !== callerId && !isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -45,6 +83,14 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "action must be 'balance', 'credit', or 'debit'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Only admins can credit or debit (no self-credit).
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Admin only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
