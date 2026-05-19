@@ -88,6 +88,26 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
     }
   };
 
+  const buy = async () => {
+    if (buyAmt < 1 || buyAmt > 1000) { toast.error("Amount must be 1–1000 ¢"); return; }
+    if (buyUses < 1 || buyUses > 100) { toast.error("Uses must be 1–100"); return; }
+    setBuying(true);
+    setBoughtCode(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("buy-code", {
+        body: { amount: buyAmt, max_uses: buyUses },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || "Failed");
+      setBoughtCode(data.code);
+      toast.success(`Code purchased for ¢${data.cost}`);
+      if (isAdmin) loadCodes();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBuying(false);
+    }
+  };
+
   const create = async () => {
     if (!CODE_RE.test(newCode)) { toast.error("Bad format"); return; }
     const amt = parseInt(amount, 10);
