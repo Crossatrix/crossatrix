@@ -185,7 +185,7 @@ export default function Dashboard() {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue={visibleTabs[0]?.v || "wallet"} className="w-full">
+        <Tabs key={visibleTabs.map((t) => t.v).join("|")} defaultValue={visibleTabs[0]?.v || "wallet"} className="w-full">
           <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${visibleTabs.length || 1}, minmax(0, 1fr))` }}>
             {visibleTabs.map((t) => (
               <TabsTrigger key={t.v} value={t.v}>{t.label}</TabsTrigger>
