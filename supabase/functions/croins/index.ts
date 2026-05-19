@@ -79,18 +79,44 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (action !== "credit" && action !== "debit") {
+    if (action !== "credit" && action !== "debit" && action !== "set") {
       return new Response(
-        JSON.stringify({ error: "action must be 'balance', 'credit', or 'debit'" }),
+        JSON.stringify({ error: "action must be 'balance', 'credit', 'debit', or 'set'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Only admins can credit or debit (no self-credit).
+    // Only admins can credit, debit, or set balances.
     if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: "Admin only" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "set") {
+      if (typeof amount !== "number" || amount < 0 || !Number.isFinite(amount)) {
+        return new Response(
+          JSON.stringify({ error: "amount must be a non-negative number" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const { data: w } = await supabase
+        .from("wallets").select("balance").eq("user_id", user_id).maybeSingle();
+      if (!w) {
+        await supabase.from("wallets").insert({ user_id, balance: amount });
+      } else {
+        await supabase.from("wallets")
+          .update({ balance: amount, updated_at: new Date().toISOString() })
+          .eq("user_id", user_id);
+      }
+      await supabase.from("croin_transactions").insert({
+        user_id, amount, type: "credit",
+        description: description || `Admin set balance to ${amount}`,
+      });
+      return new Response(
+        JSON.stringify({ user_id, action, new_balance: amount }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
