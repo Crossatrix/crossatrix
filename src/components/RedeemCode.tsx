@@ -200,6 +200,11 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
                   <span className="text-xs font-mono text-muted-foreground shrink-0">
                     {c.uses}/{c.max_uses}
                   </span>
+                  <Switch
+                    checked={c.active}
+                    onCheckedChange={(v) => toggleActive(c.id, v)}
+                    aria-label="Toggle active"
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
