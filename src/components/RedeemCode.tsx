@@ -173,6 +173,59 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
         </Button>
       </div>
 
+      <div className="mt-5 pt-4 border-t border-border space-y-3">
+        <div className="flex items-center gap-2">
+          <ShoppingCart className="h-4 w-4 text-primary" />
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Buy a Code
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex-1 space-y-1">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              ¢ per use (max 1000)
+            </label>
+            <Input
+              type="number"
+              min={1}
+              max={1000}
+              value={buyAmount}
+              onChange={(e) => setBuyAmount(e.target.value)}
+            />
+          </div>
+          <div className="flex-1 space-y-1">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              Uses (max 100)
+            </label>
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={buyMaxUses}
+              onChange={(e) => setBuyMaxUses(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between text-xs font-mono">
+          <span className="text-muted-foreground">
+            Cost: {buyAmt} × {buyUses} × 1.05
+          </span>
+          <span className="text-primary text-sm">¢{buyCost.toLocaleString()}</span>
+        </div>
+        <Button onClick={buy} disabled={buying || buyCost <= 0} variant="signal" className="w-full">
+          {buying ? "Purchasing…" : `Buy Code for ¢${buyCost.toLocaleString()}`}
+        </Button>
+        {boughtCode && (
+          <button
+            onClick={() => copy(boughtCode)}
+            className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-muted/20 border border-border text-xs font-mono text-foreground hover:text-primary"
+          >
+            <Copy className="h-3 w-3" /> {boughtCode}
+          </button>
+        )}
+      </div>
+
+
       {isAdmin && (
         <div className="mt-5 pt-4 border-t border-border space-y-3">
           <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
