@@ -104,6 +104,20 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
     setCodes((p) => p.filter((c) => c.id !== id));
   };
 
+  const toggleActive = async (id: string, active: boolean) => {
+    setCodes((p) => p.map((c) => (c.id === id ? { ...c, active } : c)));
+    const { error } = await supabase
+      .from("croin_codes")
+      .update({ active, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      setCodes((p) => p.map((c) => (c.id === id ? { ...c, active: !active } : c)));
+    } else {
+      toast.success(active ? "Code activated" : "Code deactivated");
+    }
+  };
+
   const copy = (c: string) => {
     navigator.clipboard.writeText(c);
     toast.success("Copied");
