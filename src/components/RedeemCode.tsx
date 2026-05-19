@@ -183,10 +183,14 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
 
           {codes.length > 0 && (
             <div className="space-y-2 mt-3 max-h-64 overflow-y-auto">
-              {codes.map((c) => (
+              {codes.map((c) => {
+                const remaining = Math.max(0, c.max_uses - c.uses);
+                const exhausted = remaining === 0;
+                const effectiveActive = c.active && !exhausted;
+                return (
                 <div
                   key={c.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border"
+                  className={`flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border ${exhausted ? "opacity-50" : ""}`}
                 >
                   <button
                     onClick={() => copy(c.code)}
@@ -197,11 +201,12 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
                   <span className="text-xs font-mono text-primary shrink-0">
                     {c.amount}¢
                   </span>
-                  <span className="text-xs font-mono text-muted-foreground shrink-0">
-                    {c.uses}/{c.max_uses}
+                  <span className={`text-xs font-mono shrink-0 ${exhausted ? "text-destructive" : "text-muted-foreground"}`}>
+                    {exhausted ? "0 left" : `${remaining} left`}
                   </span>
                   <Switch
-                    checked={c.active}
+                    checked={effectiveActive}
+                    disabled={exhausted}
                     onCheckedChange={(v) => toggleActive(c.id, v)}
                     aria-label="Toggle active"
                   />
@@ -214,7 +219,8 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
