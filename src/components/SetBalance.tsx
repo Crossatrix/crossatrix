@@ -32,27 +32,17 @@ export default function SetBalance({ userId, userEmail, onBalanceSet }: SetBalan
 
     setSetting(true);
     try {
-      // Ensure wallet exists
-      const { data: wallet } = await supabase
-        .from("wallets")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!wallet) {
-        await supabase.from("wallets").insert({ user_id: userId, balance: amount });
-      } else {
-        await supabase
-          .from("wallets")
-          .update({ balance: amount, updated_at: new Date().toISOString() })
-          .eq("user_id", userId);
+      const { data, error } = await supabase.functions.invoke("croins", {
+        body: { action: "set", user_id: userId, amount },
+      });
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Failed");
       }
-
       toast.success(`Balance set to ¢${amount.toLocaleString()}`);
       setNewBalance("");
       onBalanceSet();
-    } catch {
-      toast.error("Failed to set balance");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to set balance");
     } finally {
       setSetting(false);
     }
