@@ -30,12 +30,21 @@ export default function Dashboard() {
   const [croinBalance, setCroinBalance] = useState<number>(0);
   const navigate = useNavigate();
   const restr = useStudentRestrictions(user?.id);
-  const visibleTabs = [
-    { v: "wallet", label: "Wallet", show: !restr.croins },
-    { v: "news", label: "News", show: !restr.news },
-    { v: "paper", label: "Paper", show: !restr.newspaper },
-    { v: "other", label: "Other", show: !restr.other },
-  ].filter((t) => t.show);
+  const restrReady = !!user && !restr.loading;
+  const visibleTabs = (restrReady
+    ? [
+        { v: "wallet", label: "Wallet", show: !restr.croins },
+        { v: "news", label: "News", show: !restr.news },
+        { v: "paper", label: "Paper", show: !restr.newspaper },
+        { v: "other", label: "Other", show: !restr.other },
+      ]
+    : [
+        { v: "wallet", label: "Wallet", show: true },
+        { v: "news", label: "News", show: true },
+        { v: "paper", label: "Paper", show: true },
+        { v: "other", label: "Other", show: true },
+      ]
+  ).filter((t) => t.show);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -176,7 +185,7 @@ export default function Dashboard() {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue={visibleTabs[0]?.v || "wallet"} className="w-full">
+        <Tabs key={visibleTabs.map((t) => t.v).join("|")} defaultValue={visibleTabs[0]?.v || "wallet"} className="w-full">
           <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${visibleTabs.length || 1}, minmax(0, 1fr))` }}>
             {visibleTabs.map((t) => (
               <TabsTrigger key={t.v} value={t.v}>{t.label}</TabsTrigger>
