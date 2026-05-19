@@ -36,6 +36,16 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
   const [maxUses, setMaxUses] = useState("10");
   const [creating, setCreating] = useState(false);
 
+  // Buy code (any user)
+  const [buyAmount, setBuyAmount] = useState("100");
+  const [buyMaxUses, setBuyMaxUses] = useState("1");
+  const [buying, setBuying] = useState(false);
+  const [boughtCode, setBoughtCode] = useState<string | null>(null);
+
+  const buyAmt = Math.max(0, Math.min(1000, parseInt(buyAmount, 10) || 0));
+  const buyUses = Math.max(0, Math.min(100, parseInt(buyMaxUses, 10) || 0));
+  const buyCost = Math.ceil(buyAmt * buyUses * 1.05);
+
   const loadCodes = async () => {
     if (!isAdmin) return;
     const { data } = await supabase
