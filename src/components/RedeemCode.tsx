@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { Gift, Plus, Trash2, Copy } from "lucide-react";
 
 const ADMINS = ["cross.a.trix.owner@hotmail.com", "moritz.loeseke7@gmail.com"];
