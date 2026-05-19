@@ -689,6 +689,16 @@ export type Database = {
         Returns: boolean
       }
       simulate_croin_price: { Args: never; Returns: undefined }
+      transfer_croins: {
+        Args: {
+          _amount: number
+          _recipient: string
+          _recipient_desc: string
+          _sender: string
+          _sender_desc: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

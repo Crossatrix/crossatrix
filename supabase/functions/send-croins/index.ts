@@ -88,59 +88,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check sender balance
-    const { data: senderWallet } = await supabase
-      .from("wallets")
-      .select("balance")
-      .eq("user_id", senderId)
-      .maybeSingle();
+    // Atomic transfer (locks sender row, prevents double-spend)
+    const { error: transferError } = await supabase.rpc("transfer_croins", {
+      _sender: senderId,
+      _recipient: recipient.id,
+      _amount: amount,
+      _sender_desc: `Sent to ${recipient_email}${reasonSuffix}`,
+      _recipient_desc: `Received from ${senderEmail}${reasonSuffix}`,
+    });
 
-    const senderBalance = senderWallet?.balance ?? 0;
-
-    if (senderBalance < amount) {
-      return new Response(JSON.stringify({ error: "Insufficient balance", balance: senderBalance }), {
-        status: 400,
+    if (transferError) {
+      const msg = transferError.message || "Transfer failed";
+      const status = /Insufficient/i.test(msg) ? 400 : 500;
+      return new Response(JSON.stringify({ error: msg }), {
+        status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Debit sender
-    await supabase
-      .from("wallets")
-      .update({ balance: senderBalance - amount, updated_at: new Date().toISOString() })
-      .eq("user_id", senderId);
-
-    // Credit recipient (ensure wallet exists)
-    const { data: recipientWallet } = await supabase
-      .from("wallets")
-      .select("balance")
-      .eq("user_id", recipient.id)
-      .maybeSingle();
-
-    if (recipientWallet) {
-      await supabase
-        .from("wallets")
-        .update({ balance: recipientWallet.balance + amount, updated_at: new Date().toISOString() })
-        .eq("user_id", recipient.id);
-    } else {
-      await supabase.from("wallets").insert({ user_id: recipient.id, balance: amount });
-    }
-
-    // Log transactions
-    await supabase.from("croin_transactions").insert([
-      {
-        user_id: senderId,
-        amount,
-        type: "debit",
-        description: `Sent to ${recipient_email}${reasonSuffix}`,
-      },
-      {
-        user_id: recipient.id,
-        amount,
-        type: "credit",
-        description: `Received from ${senderEmail}${reasonSuffix}`,
-      },
-    ]);
 
     return new Response(
       JSON.stringify({ success: true, amount, recipient: recipient_email }),
