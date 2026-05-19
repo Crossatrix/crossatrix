@@ -29,3 +29,7 @@ verify_jwt = false
 
 [functions.redeem-code]
 verify_jwt = false
+
+[functions.buy-code]
+verify_jwt = false
+

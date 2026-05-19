@@ -688,6 +688,21 @@ export type Database = {
         Args: { _class: string; _uid: string }
         Returns: boolean
       }
+      purchase_croin_code: {
+        Args: {
+          _amount: number
+          _buyer: string
+          _code: string
+          _max_uses: number
+        }
+        Returns: {
+          amount: number
+          code: string
+          cost: number
+          id: string
+          max_uses: number
+        }[]
+      }
       simulate_croin_price: { Args: never; Returns: undefined }
       transfer_croins: {
         Args: {
