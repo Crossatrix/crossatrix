@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { Gift, Plus, Trash2, Copy } from "lucide-react";
 
 const ADMINS = ["cross.a.trix.owner@hotmail.com", "moritz.loeseke7@gmail.com"];
@@ -103,6 +104,20 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
     setCodes((p) => p.filter((c) => c.id !== id));
   };
 
+  const toggleActive = async (id: string, active: boolean) => {
+    setCodes((p) => p.map((c) => (c.id === id ? { ...c, active } : c)));
+    const { error } = await supabase
+      .from("croin_codes")
+      .update({ active, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      setCodes((p) => p.map((c) => (c.id === id ? { ...c, active: !active } : c)));
+    } else {
+      toast.success(active ? "Code activated" : "Code deactivated");
+    }
+  };
+
   const copy = (c: string) => {
     navigator.clipboard.writeText(c);
     toast.success("Copied");
@@ -185,6 +200,11 @@ export default function RedeemCode({ userId, userEmail }: { userId: string; user
                   <span className="text-xs font-mono text-muted-foreground shrink-0">
                     {c.uses}/{c.max_uses}
                   </span>
+                  <Switch
+                    checked={c.active}
+                    onCheckedChange={(v) => toggleActive(c.id, v)}
+                    aria-label="Toggle active"
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
