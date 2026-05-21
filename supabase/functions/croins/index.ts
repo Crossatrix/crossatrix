@@ -20,34 +20,48 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const apiKey = Deno.env.get("CROINS_API_KEY");
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Require authenticated caller
-    const authHeader =
-      req.headers.get("authorization") || req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Not authenticated" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    // External API key bypass (admin-level)
+    const providedKey =
+      req.headers.get("x-api-key") || req.headers.get("X-Api-Key");
+    const hasApiKey = !!apiKey && !!providedKey && providedKey === apiKey;
+
+    let callerId: string | null = null;
+    let isAdmin = false;
+
+    if (hasApiKey) {
+      isAdmin = true;
+    } else {
+      // Require authenticated caller
+      const authHeader =
+        req.headers.get("authorization") || req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Not authenticated" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(
+        authHeader.replace("Bearer ", "")
       );
+      if (claimsError || !claimsData?.claims) {
+        return new Response(
+          JSON.stringify({ error: "Invalid token" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      callerId = claimsData.claims.sub as string;
+      const callerEmail = (claimsData.claims.email as string | undefined)?.toLowerCase();
+      isAdmin = !!callerEmail && ADMIN_EMAILS.includes(callerEmail);
     }
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
-    if (claimsError || !claimsData?.claims) {
-      return new Response(
-        JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const callerId = claimsData.claims.sub as string;
-    const callerEmail = (claimsData.claims.email as string | undefined)?.toLowerCase();
-    const isAdmin = !!callerEmail && ADMIN_EMAILS.includes(callerEmail);
 
     const { action, user_id, amount, description } = await req.json();
 
