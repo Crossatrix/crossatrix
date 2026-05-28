@@ -33,3 +33,11 @@ verify_jwt = false
 [functions.buy-code]
 verify_jwt = false
 
+[functions.trade-share]
+verify_jwt = false
+
+[functions.crossshare-api]
+verify_jwt = false
+
+
+
