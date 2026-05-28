@@ -537,6 +537,106 @@ export type Database = {
         }
         Relationships: []
       }
+      share_holdings: {
+        Row: {
+          id: string
+          quantity: number
+          share_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          quantity?: number
+          share_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          quantity?: number
+          share_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_holdings_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_transactions: {
+        Row: {
+          created_at: string
+          id: string
+          price_at_tx: number
+          quantity: number
+          share_id: string
+          total: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price_at_tx: number
+          quantity: number
+          share_id: string
+          total: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price_at_tx?: number
+          quantity?: number
+          share_id?: string
+          total?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_transactions_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shares: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          price: number
+          symbol: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          price?: number
+          symbol: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          symbol?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_restrictions: {
         Row: {
           class_id: string
@@ -704,6 +804,19 @@ export type Database = {
         }[]
       }
       simulate_croin_price: { Args: never; Returns: undefined }
+      trade_share: {
+        Args: {
+          _quantity: number
+          _share_id: string
+          _type: string
+          _user: string
+        }
+        Returns: {
+          new_quantity: number
+          price: number
+          total: number
+        }[]
+      }
       transfer_croins: {
         Args: {
           _amount: number
