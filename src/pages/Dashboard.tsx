@@ -272,6 +272,10 @@ export default function Dashboard() {
             {user && <TransactionHistory userId={user.id} />}
           </TabsContent>
 
+          <TabsContent value="shares">
+            {user && <Shares userId={user.id} userEmail={user.email} onTrade={() => loadBalance(user.id)} />}
+          </TabsContent>
+
           <TabsContent value="news">
             <News userEmail={user?.email} />
           </TabsContent>
