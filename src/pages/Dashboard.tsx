@@ -16,6 +16,7 @@ import News from "@/components/News";
 import Newspaper from "@/components/Newspaper";
 import ShareButton from "@/components/ShareButton";
 import RedeemCode from "@/components/RedeemCode";
+import Shares from "@/components/Shares";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStudentRestrictions } from "@/hooks/useStudentRestrictions";
 
@@ -34,12 +35,14 @@ export default function Dashboard() {
   const visibleTabs = (restrReady
     ? [
         { v: "wallet", label: "Wallet", show: !restr.croins },
+        { v: "shares", label: "Shares", show: !restr.croins },
         { v: "news", label: "News", show: !restr.news },
         { v: "paper", label: "Paper", show: !restr.newspaper },
         { v: "other", label: "Other", show: !restr.other },
       ]
     : [
         { v: "wallet", label: "Wallet", show: true },
+        { v: "shares", label: "Shares", show: true },
         { v: "news", label: "News", show: true },
         { v: "paper", label: "Paper", show: true },
         { v: "other", label: "Other", show: true },
@@ -267,6 +270,10 @@ export default function Dashboard() {
 
             {/* Transaction History */}
             {user && <TransactionHistory userId={user.id} />}
+          </TabsContent>
+
+          <TabsContent value="shares">
+            {user && <Shares userId={user.id} userEmail={user.email} onTrade={() => loadBalance(user.id)} />}
           </TabsContent>
 
           <TabsContent value="news">
