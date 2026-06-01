@@ -537,6 +537,47 @@ export type Database = {
         }
         Relationships: []
       }
+      share_categories: {
+        Row: {
+          amount: number
+          color: string
+          created_at: string
+          id: string
+          name: string
+          share_id: string
+          threshold: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          share_id: string
+          threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          share_id?: string
+          threshold?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_categories_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_holdings: {
         Row: {
           id: string
@@ -824,6 +865,7 @@ export type Database = {
           max_uses: number
         }[]
       }
+      recompute_share_price: { Args: { _share_id: string }; Returns: undefined }
       simulate_croin_price: { Args: never; Returns: undefined }
       trade_share: {
         Args: {
