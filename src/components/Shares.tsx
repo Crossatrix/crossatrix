@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { TrendingUp, Plus, Trash2, Save } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, Trash2, Save } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, XAxis, YAxis } from "recharts";
 
 const ADMIN = "cross.a.trix.owner@hotmail.com";
 
@@ -17,6 +19,48 @@ interface Share {
 interface Holding {
   share_id: string;
   quantity: number;
+}
+
+interface PricePoint {
+  share_id: string;
+  price: number;
+  created_at: string;
+}
+
+const chartConfig = { price: { label: "Price", color: "hsl(var(--primary))" } };
+
+function ShareChart({ points }: { points: PricePoint[] }) {
+  const data = [...points]
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    .map((p) => ({
+      time: new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      price: Number(p.price),
+    }));
+
+  if (data.length < 2) {
+    return (
+      <div className="h-[120px] w-full flex items-center justify-center text-xs text-muted-foreground">
+        Not enough data yet — chart updates as the price changes.
+      </div>
+    );
+  }
+
+  return (
+    <ChartContainer config={chartConfig} className="h-[120px] w-full">
+      <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id="sharePriceGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <XAxis dataKey="time" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} minTickGap={20} />
+        <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Area type="monotone" dataKey="price" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#sharePriceGrad)" />
+      </AreaChart>
+    </ChartContainer>
+  );
 }
 
 export default function Shares({ userId, userEmail, onTrade }: { userId: string; userEmail?: string; onTrade?: () => void }) {
