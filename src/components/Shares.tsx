@@ -179,14 +179,29 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
           const owned = holdings[s.id] ?? 0;
           const n = parseInt(qty[s.id] || "0", 10) || 0;
           const cost = Math.ceil(s.price * n);
+          const points = history[s.id] ?? [];
+          const sorted = [...points].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          const prev = sorted.length > 1 ? Number(sorted[sorted.length - 2].price) : s.price;
+          const change = s.price - prev;
+          const up = change >= 0;
           return (
             <div key={s.id} className="p-4 rounded-xl border border-border bg-muted/10 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold text-foreground">{s.name} <span className="text-xs text-muted-foreground font-mono">({s.symbol})</span></p>
-                  <p className="text-xs text-muted-foreground">Worth: <span className="text-primary font-mono">¢{Number(s.price).toFixed(2)}</span> · You own: <span className="text-foreground">{owned}</span> / 1000</p>
+                  <p className="text-xs text-muted-foreground">
+                    Worth: <span className="text-primary font-mono">¢{Number(s.price).toFixed(2)}</span>
+                    <span className={`ml-2 font-mono inline-flex items-center gap-0.5 ${up ? "text-green-400" : "text-red-400"}`}>
+                      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {up ? "+" : ""}{change.toFixed(2)}
+                    </span>
+                    · You own: <span className="text-foreground">{owned}</span> / 1000
+                  </p>
                 </div>
               </div>
+
+              <ShareChart points={points} />
+
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
