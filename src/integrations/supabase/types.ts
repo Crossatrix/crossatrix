@@ -569,6 +569,27 @@ export type Database = {
           },
         ]
       }
+      share_price_history: {
+        Row: {
+          created_at: string
+          id: string
+          price: number
+          share_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price: number
+          share_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price?: number
+          share_id?: string
+        }
+        Relationships: []
+      }
       share_transactions: {
         Row: {
           created_at: string

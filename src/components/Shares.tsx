@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { TrendingUp, Plus, Trash2, Save } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, Trash2, Save } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, XAxis, YAxis } from "recharts";
 
 const ADMIN = "cross.a.trix.owner@hotmail.com";
 
@@ -19,10 +21,53 @@ interface Holding {
   quantity: number;
 }
 
+interface PricePoint {
+  share_id: string;
+  price: number;
+  created_at: string;
+}
+
+const chartConfig = { price: { label: "Price", color: "hsl(var(--primary))" } };
+
+function ShareChart({ points }: { points: PricePoint[] }) {
+  const data = [...points]
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    .map((p) => ({
+      time: new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      price: Number(p.price),
+    }));
+
+  if (data.length < 2) {
+    return (
+      <div className="h-[120px] w-full flex items-center justify-center text-xs text-muted-foreground">
+        Not enough data yet — chart updates as the price changes.
+      </div>
+    );
+  }
+
+  return (
+    <ChartContainer config={chartConfig} className="h-[120px] w-full">
+      <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id="sharePriceGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <XAxis dataKey="time" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} minTickGap={20} />
+        <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Area type="monotone" dataKey="price" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#sharePriceGrad)" />
+      </AreaChart>
+    </ChartContainer>
+  );
+}
+
 export default function Shares({ userId, userEmail, onTrade }: { userId: string; userEmail?: string; onTrade?: () => void }) {
   const isAdmin = userEmail === ADMIN;
   const [shares, setShares] = useState<Share[]>([]);
   const [holdings, setHoldings] = useState<Record<string, number>>({});
+  const [history, setHistory] = useState<Record<string, PricePoint[]>>({});
   const [qty, setQty] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -33,14 +78,24 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
   const [editPrice, setEditPrice] = useState<Record<string, string>>({});
 
   const load = async () => {
-    const [{ data: s }, { data: h }] = await Promise.all([
+    const [{ data: s }, { data: h }, { data: ph }] = await Promise.all([
       supabase.from("shares").select("id, symbol, name, price").order("symbol"),
       supabase.from("share_holdings").select("share_id, quantity").eq("user_id", userId),
+      supabase
+        .from("share_price_history")
+        .select("share_id, price, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
     ]);
     setShares((s as Share[]) ?? []);
     const map: Record<string, number> = {};
     for (const row of (h as Holding[]) ?? []) map[row.share_id] = row.quantity;
     setHoldings(map);
+    const hist: Record<string, PricePoint[]> = {};
+    for (const row of (ph as PricePoint[]) ?? []) {
+      (hist[row.share_id] ??= []).push(row);
+    }
+    setHistory(hist);
   };
 
   useEffect(() => {
@@ -48,6 +103,13 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
     const ch = supabase
       .channel("shares-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "shares" }, () => load())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "share_price_history" }, (payload) => {
+        const p = payload.new as PricePoint;
+        setHistory((prev) => ({
+          ...prev,
+          [p.share_id]: [p, ...(prev[p.share_id] ?? [])].slice(0, 200),
+        }));
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,14 +179,29 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
           const owned = holdings[s.id] ?? 0;
           const n = parseInt(qty[s.id] || "0", 10) || 0;
           const cost = Math.ceil(s.price * n);
+          const points = history[s.id] ?? [];
+          const sorted = [...points].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          const prev = sorted.length > 1 ? Number(sorted[sorted.length - 2].price) : s.price;
+          const change = s.price - prev;
+          const up = change >= 0;
           return (
             <div key={s.id} className="p-4 rounded-xl border border-border bg-muted/10 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold text-foreground">{s.name} <span className="text-xs text-muted-foreground font-mono">({s.symbol})</span></p>
-                  <p className="text-xs text-muted-foreground">Worth: <span className="text-primary font-mono">¢{Number(s.price).toFixed(2)}</span> · You own: <span className="text-foreground">{owned}</span> / 1000</p>
+                  <p className="text-xs text-muted-foreground">
+                    Worth: <span className="text-primary font-mono">¢{Number(s.price).toFixed(2)}</span>
+                    <span className={`ml-2 font-mono inline-flex items-center gap-0.5 ${up ? "text-green-400" : "text-red-400"}`}>
+                      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {up ? "+" : ""}{change.toFixed(2)}
+                    </span>
+                    · You own: <span className="text-foreground">{owned}</span> / 1000
+                  </p>
                 </div>
               </div>
+
+              <ShareChart points={points} />
+
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
