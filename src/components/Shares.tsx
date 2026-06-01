@@ -67,6 +67,7 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
   const isAdmin = userEmail === ADMIN;
   const [shares, setShares] = useState<Share[]>([]);
   const [holdings, setHoldings] = useState<Record<string, number>>({});
+  const [history, setHistory] = useState<Record<string, PricePoint[]>>({});
   const [qty, setQty] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -77,14 +78,24 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
   const [editPrice, setEditPrice] = useState<Record<string, string>>({});
 
   const load = async () => {
-    const [{ data: s }, { data: h }] = await Promise.all([
+    const [{ data: s }, { data: h }, { data: ph }] = await Promise.all([
       supabase.from("shares").select("id, symbol, name, price").order("symbol"),
       supabase.from("share_holdings").select("share_id, quantity").eq("user_id", userId),
+      supabase
+        .from("share_price_history")
+        .select("share_id, price, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
     ]);
     setShares((s as Share[]) ?? []);
     const map: Record<string, number> = {};
     for (const row of (h as Holding[]) ?? []) map[row.share_id] = row.quantity;
     setHoldings(map);
+    const hist: Record<string, PricePoint[]> = {};
+    for (const row of (ph as PricePoint[]) ?? []) {
+      (hist[row.share_id] ??= []).push(row);
+    }
+    setHistory(hist);
   };
 
   useEffect(() => {
@@ -92,6 +103,13 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
     const ch = supabase
       .channel("shares-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "shares" }, () => load())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "share_price_history" }, (payload) => {
+        const p = payload.new as PricePoint;
+        setHistory((prev) => ({
+          ...prev,
+          [p.share_id]: [p, ...(prev[p.share_id] ?? [])].slice(0, 200),
+        }));
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
