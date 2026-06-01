@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, Plus, Trash2, Save } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, Trash2, Save, Tag } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 
@@ -25,6 +25,15 @@ interface PricePoint {
   share_id: string;
   price: number;
   created_at: string;
+}
+
+interface Category {
+  id: string;
+  share_id: string;
+  name: string;
+  color: string;
+  amount: number;
+  threshold: number;
 }
 
 const chartConfig = { price: { label: "Price", color: "hsl(var(--primary))" } };
@@ -68,17 +77,25 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
   const [shares, setShares] = useState<Share[]>([]);
   const [holdings, setHoldings] = useState<Record<string, number>>({});
   const [history, setHistory] = useState<Record<string, PricePoint[]>>({});
+  const [categories, setCategories] = useState<Record<string, Category[]>>({});
+  const [croinPrice, setCroinPrice] = useState<number>(1);
   const [qty, setQty] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
-  // admin
+  // admin: add share
   const [newSymbol, setNewSymbol] = useState("");
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("1.00");
   const [editPrice, setEditPrice] = useState<Record<string, string>>({});
 
+  // admin: add category (per share)
+  const [catName, setCatName] = useState<Record<string, string>>({});
+  const [catColor, setCatColor] = useState<Record<string, string>>({});
+  const [catAmount, setCatAmount] = useState<Record<string, string>>({});
+  const [catThreshold, setCatThreshold] = useState<Record<string, string>>({});
+
   const load = async () => {
-    const [{ data: s }, { data: h }, { data: ph }] = await Promise.all([
+    const [{ data: s }, { data: h }, { data: ph }, { data: cats }, { data: cp }] = await Promise.all([
       supabase.from("shares").select("id, symbol, name, price").order("symbol"),
       supabase.from("share_holdings").select("share_id, quantity").eq("user_id", userId),
       supabase
@@ -86,6 +103,8 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
         .select("share_id, price, created_at")
         .order("created_at", { ascending: false })
         .limit(1000),
+      supabase.from("share_categories").select("id, share_id, name, color, amount, threshold").order("created_at"),
+      supabase.from("croin_price_history").select("price").order("created_at", { ascending: false }).limit(1),
     ]);
     setShares((s as Share[]) ?? []);
     const map: Record<string, number> = {};
@@ -96,6 +115,12 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
       (hist[row.share_id] ??= []).push(row);
     }
     setHistory(hist);
+    const catMap: Record<string, Category[]> = {};
+    for (const row of (cats as Category[]) ?? []) {
+      (catMap[row.share_id] ??= []).push(row);
+    }
+    setCategories(catMap);
+    if (cp && cp[0]) setCroinPrice(Number((cp[0] as { price: number }).price) || 1);
   };
 
   useEffect(() => {
@@ -103,6 +128,11 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
     const ch = supabase
       .channel("shares-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "shares" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "share_categories" }, () => load())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "croin_price_history" }, (payload) => {
+        const p = payload.new as { price: number };
+        setCroinPrice(Number(p.price) || 1);
+      })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "share_price_history" }, (payload) => {
         const p = payload.new as PricePoint;
         setHistory((prev) => ({
@@ -114,6 +144,9 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // Effective cost = base price × croin price (rounded up), per unit.
+  const effUnit = (price: number) => price * croinPrice;
 
   const trade = async (share_id: string, type: "buy" | "sell") => {
     const n = parseInt(qty[share_id] || "0", 10);
@@ -163,11 +196,46 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
     load();
   };
 
+  const addCategory = async (share_id: string) => {
+    const nm = (catName[share_id] || "").trim();
+    const color = (catColor[share_id] || "#22d3ee").trim();
+    const amount = Number(catAmount[share_id] ?? "0");
+    const threshold = Number(catThreshold[share_id] ?? "1");
+    if (!nm) { toast.error("Category name required"); return; }
+    if (!Number.isFinite(amount) || amount < 0) { toast.error("Invalid amount"); return; }
+    if (!Number.isFinite(threshold) || threshold <= 0) { toast.error("Threshold must be > 0"); return; }
+    const { error } = await supabase.from("share_categories").insert({ share_id, name: nm, color, amount, threshold });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Category added");
+    setCatName((s) => ({ ...s, [share_id]: "" }));
+    setCatColor((s) => ({ ...s, [share_id]: "#22d3ee" }));
+    setCatAmount((s) => ({ ...s, [share_id]: "" }));
+    setCatThreshold((s) => ({ ...s, [share_id]: "" }));
+    load();
+  };
+
+  const updateCategory = async (cat: Category, patch: Partial<Category>) => {
+    const { error } = await supabase.from("share_categories").update(patch).eq("id", cat.id);
+    if (error) { toast.error(error.message); return; }
+    load();
+  };
+
+  const removeCategory = async (id: string) => {
+    const { error } = await supabase.from("share_categories").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    load();
+  };
+
   return (
     <div className="mt-6 p-6 rounded-2xl border border-border bg-card shadow-vault space-y-5">
-      <div className="flex items-center gap-2">
-        <TrendingUp className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-mono uppercase tracking-widest text-muted-foreground">Shares</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-mono uppercase tracking-widest text-muted-foreground">Shares</h3>
+        </div>
+        <span className="text-xs font-mono text-muted-foreground">
+          Croin price: <span className="text-primary">¢{croinPrice.toFixed(2)}</span>
+        </span>
       </div>
 
       {shares.length === 0 && (
@@ -178,8 +246,9 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
         {shares.map((s) => {
           const owned = holdings[s.id] ?? 0;
           const n = parseInt(qty[s.id] || "0", 10) || 0;
-          const cost = Math.ceil(s.price * n);
+          const cost = Math.ceil(effUnit(s.price) * n);
           const points = history[s.id] ?? [];
+          const cats = categories[s.id] ?? [];
           const sorted = [...points].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
           const prev = sorted.length > 1 ? Number(sorted[sorted.length - 2].price) : s.price;
           const change = s.price - prev;
@@ -197,8 +266,28 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
                     </span>
                     · You own: <span className="text-foreground">{owned}</span> / 1000
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Trade price: <span className="text-foreground font-mono">¢{effUnit(s.price).toFixed(2)}</span> each
+                    <span className="ml-1 opacity-70">(worth × croin price)</span>
+                  </p>
                 </div>
               </div>
+
+              {cats.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {cats.map((c) => (
+                    <span
+                      key={c.id}
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-mono border"
+                      style={{ borderColor: c.color, color: c.color, backgroundColor: `${c.color}1a` }}
+                      title={`${c.name}: ${c.amount} ÷ ${c.threshold} = +${(c.amount / c.threshold).toFixed(2)}`}
+                    >
+                      <Tag className="h-2.5 w-2.5" />
+                      {c.name} ({c.amount}/{c.threshold})
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <ShareChart points={points} />
 
@@ -221,22 +310,81 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
               </div>
 
               {isAdmin && (
-                <div className="flex items-center gap-2 pt-2 border-t border-border/50">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    placeholder={`New price (now ${Number(s.price).toFixed(2)})`}
-                    value={editPrice[s.id] ?? ""}
-                    onChange={(e) => setEditPrice((p) => ({ ...p, [s.id]: e.target.value }))}
-                    className="h-9 flex-1"
-                  />
-                  <Button size="sm" variant="outline" onClick={() => updatePrice(s.id)}>
-                    <Save className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => removeShare(s.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-3 pt-2 border-t border-border/50">
+                  {cats.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Categories</p>
+                      {cats.map((c) => (
+                        <div key={c.id} className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="color"
+                            value={c.color}
+                            onChange={(e) => updateCategory(c, { color: e.target.value })}
+                            className="h-9 w-9 rounded-md border border-input bg-transparent cursor-pointer"
+                            title="Category color"
+                          />
+                          <Input
+                            defaultValue={c.name}
+                            onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.name) updateCategory(c, { name: e.target.value.trim() }); }}
+                            className="h-9 flex-1 min-w-[120px]"
+                          />
+                          <Input
+                            type="number"
+                            defaultValue={c.amount}
+                            onBlur={(e) => { const v = Number(e.target.value); if (Number.isFinite(v) && v !== c.amount) updateCategory(c, { amount: v }); }}
+                            className="h-9 w-24"
+                            title="Amount"
+                          />
+                          <span className="text-xs text-muted-foreground">÷</span>
+                          <Input
+                            type="number"
+                            min={0.0001}
+                            defaultValue={c.threshold}
+                            onBlur={(e) => { const v = Number(e.target.value); if (Number.isFinite(v) && v > 0 && v !== c.threshold) updateCategory(c, { threshold: v }); }}
+                            className="h-9 w-24"
+                            title="Units needed for +1 price"
+                          />
+                          <Button size="sm" variant="outline" onClick={() => removeCategory(c.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="color"
+                      value={catColor[s.id] ?? "#22d3ee"}
+                      onChange={(e) => setCatColor((p) => ({ ...p, [s.id]: e.target.value }))}
+                      className="h-9 w-9 rounded-md border border-input bg-transparent cursor-pointer"
+                      title="New category color"
+                    />
+                    <Input placeholder="Category name" value={catName[s.id] ?? ""} onChange={(e) => setCatName((p) => ({ ...p, [s.id]: e.target.value }))} className="h-9 flex-1 min-w-[120px]" />
+                    <Input type="number" placeholder="Amount" value={catAmount[s.id] ?? ""} onChange={(e) => setCatAmount((p) => ({ ...p, [s.id]: e.target.value }))} className="h-9 w-24" />
+                    <span className="text-xs text-muted-foreground">per +1</span>
+                    <Input type="number" min={0.0001} placeholder="Threshold" value={catThreshold[s.id] ?? ""} onChange={(e) => setCatThreshold((p) => ({ ...p, [s.id]: e.target.value }))} className="h-9 w-24" />
+                    <Button size="sm" variant="signal" onClick={() => addCategory(s.id)}><Plus className="h-4 w-4 mr-1" />Category</Button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      placeholder={cats.length > 0 ? "Price is auto-calculated from categories" : `Manual price (now ${Number(s.price).toFixed(2)})`}
+                      value={editPrice[s.id] ?? ""}
+                      disabled={cats.length > 0}
+                      onChange={(e) => setEditPrice((p) => ({ ...p, [s.id]: e.target.value }))}
+                      className="h-9 flex-1"
+                    />
+                    <Button size="sm" variant="outline" disabled={cats.length > 0} onClick={() => updatePrice(s.id)}>
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => removeShare(s.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -253,6 +401,9 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
             <Input placeholder="Price" type="number" step="0.01" min={0} value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="h-9 w-24" />
             <Button size="sm" variant="signal" onClick={addShare}><Plus className="h-4 w-4 mr-1" />Add</Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Add categories to a share to auto-calculate its worth. Buy/sell cost = worth × current Croin price.
+          </p>
           <p className="text-xs text-muted-foreground">
             API: <code className="font-mono">/functions/v1/crossshare-api?share=SYMBOL&amp;api-key=KEY&amp;price=NEW</code>
           </p>
