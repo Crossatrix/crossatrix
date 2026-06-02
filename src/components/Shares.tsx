@@ -316,7 +316,6 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
                 <Input
                   type="number"
                   min={1}
-                  max={1000}
                   placeholder="Qty"
                   value={qty[s.id] ?? ""}
                   onChange={(e) => setQty((q) => ({ ...q, [s.id]: e.target.value }))}
