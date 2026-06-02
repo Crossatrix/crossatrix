@@ -310,7 +310,7 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
                 </div>
               )}
 
-              <ShareChart points={points} />
+              <ShareChart points={points} cats={cats} />
 
               <div className="flex items-center gap-2">
                 <Input
