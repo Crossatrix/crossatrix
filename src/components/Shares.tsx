@@ -425,7 +425,10 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
             Add categories to a share to auto-calculate its worth. Buy/sell cost = worth × current Croin price.
           </p>
           <p className="text-xs text-muted-foreground">
-            API: <code className="font-mono">/functions/v1/crossshare-api?share=SYMBOL&amp;api-key=KEY&amp;price=NEW</code>
+            Set price: <code className="font-mono">/functions/v1/crossshare-api?share=SYMBOL&amp;api-key=KEY&amp;price=NEW</code>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Set category: <code className="font-mono">…?share=SYMBOL&amp;api-key=KEY&amp;category=NAME&amp;amount=10&amp;threshold=5&amp;color=%23ff0000</code> (omit values to keep them; add <code className="font-mono">&amp;delete=true</code> to remove)
           </p>
         </div>
       )}
