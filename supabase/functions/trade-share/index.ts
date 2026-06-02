@@ -44,8 +44,8 @@ Deno.serve(async (req) => {
       });
     }
     const qty = Math.floor(quantity);
-    if (qty < 1 || qty > 1000) {
-      return new Response(JSON.stringify({ error: "Quantity must be 1-1000" }), {
+    if (qty < 1) {
+      return new Response(JSON.stringify({ error: "Quantity must be at least 1" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
