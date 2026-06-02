@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, Plus, Trash2, Save, Tag } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, XAxis, YAxis } from "recharts";
+import { Area, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
 const ADMIN = "cross.a.trix.owner@hotmail.com";
 
