@@ -38,13 +38,19 @@ interface Category {
 
 const chartConfig = { price: { label: "Price", color: "hsl(var(--primary))" } };
 
-function ShareChart({ points }: { points: PricePoint[] }) {
+function ShareChart({ points, cats }: { points: PricePoint[]; cats: Category[] }) {
+  const contrib = (c: Category) => (c.threshold > 0 ? c.amount / c.threshold : 0);
+
   const data = [...points]
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .map((p) => ({
-      time: new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      price: Number(p.price),
-    }));
+    .map((p) => {
+      const row: Record<string, number | string> = {
+        time: new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        price: Number(p.price),
+      };
+      for (const c of cats) row[`cat_${c.id}`] = contrib(c);
+      return row;
+    });
 
   if (data.length < 2) {
     return (
@@ -54,9 +60,12 @@ function ShareChart({ points }: { points: PricePoint[] }) {
     );
   }
 
+  const cfg: typeof chartConfig & Record<string, { label: string; color: string }> = { ...chartConfig };
+  for (const c of cats) cfg[`cat_${c.id}`] = { label: c.name, color: c.color };
+
   return (
-    <ChartContainer config={chartConfig} className="h-[120px] w-full">
-      <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+    <ChartContainer config={cfg} className="h-[120px] w-full">
+      <ComposedChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
         <defs>
           <linearGradient id="sharePriceGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -67,7 +76,19 @@ function ShareChart({ points }: { points: PricePoint[] }) {
         <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <Area type="monotone" dataKey="price" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#sharePriceGrad)" />
-      </AreaChart>
+        {cats.map((c) => (
+          <Line
+            key={c.id}
+            type="monotone"
+            dataKey={`cat_${c.id}`}
+            stroke={c.color}
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            dot={false}
+            isAnimationActive={false}
+          />
+        ))}
+      </ComposedChart>
     </ChartContainer>
   );
 }
