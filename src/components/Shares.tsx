@@ -285,7 +285,7 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
                       {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                       {up ? "+" : ""}{change.toFixed(2)}
                     </span>
-                    · You own: <span className="text-foreground">{owned}</span> / 1000
+                    · You own: <span className="text-foreground">{owned}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Trade price: <span className="text-foreground font-mono">¢{effUnit(s.price).toFixed(2)}</span> each
