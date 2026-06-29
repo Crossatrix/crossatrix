@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Newspaper, Send, Trash2 } from "lucide-react";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 
 const OWNER_EMAIL = "cross.a.trix.owner@hotmail.com";
 
@@ -31,13 +32,23 @@ export default function News({ userEmail }: { userEmail?: string | null }) {
       .select("id,title,body,created_at")
       .order("created_at", { ascending: false });
     if (error) toast.error("Failed to load news");
-    setPosts((data as NewsPost[]) ?? []);
+    const rows = (data as NewsPost[]) ?? [];
+    setPosts(rows);
+    writeCache("news-posts", rows);
     setLoading(false);
   };
 
   useEffect(() => {
-    load();
+    const cached = readCache<NewsPost[]>("news-posts");
+    if (cached) {
+      setPosts(cached);
+      setLoading(false);
+    } else {
+      load();
+    }
   }, []);
+
+  useRefreshSignal(load);
 
   const handlePost = async () => {
     const t = title.trim();

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Trash2, Plus, Image as ImageIcon, Paperclip, Link as LinkIcon, Pencil, Save, X } from "lucide-react";
 import { renderContent } from "@/lib/newspaperRender";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 
 const OWNER_EMAILS = ["cross.a.trix.owner@hotmail.com", "moritz.loeseke7@gmail.com"];
 
@@ -51,13 +52,23 @@ export default function Newspaper({ userEmail, userId }: Props) {
       .select("*")
       .order("created_at", { ascending: false });
     if (error) toast.error("Failed to load newspaper");
-    setIssues((data as Issue[]) ?? []);
+    const rows = (data as Issue[]) ?? [];
+    setIssues(rows);
+    writeCache("newspaper-issues", rows);
     setLoading(false);
   };
 
   useEffect(() => {
-    load();
+    const cached = readCache<Issue[]>("newspaper-issues");
+    if (cached) {
+      setIssues(cached);
+      setLoading(false);
+    } else {
+      load();
+    }
   }, []);
+
+  useRefreshSignal(load);
 
   const uploadFile = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "bin";

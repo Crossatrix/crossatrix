@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { TrendingUp, TrendingDown, Plus, Trash2, Save, Tag } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, ComposedChart, Line, XAxis, YAxis } from "recharts";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 
 const ADMIN = "cross.a.trix.owner@hotmail.com";
 
@@ -115,7 +116,7 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
   const [catAmount, setCatAmount] = useState<Record<string, string>>({});
   const [catThreshold, setCatThreshold] = useState<Record<string, string>>({});
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [{ data: s }, { data: h }, { data: ph }, { data: cats }, { data: cp }] = await Promise.all([
       supabase.from("shares").select("id, symbol, name, price").order("symbol"),
       supabase.from("share_holdings").select("share_id, quantity").eq("user_id", userId),
@@ -127,7 +128,8 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
       supabase.from("share_categories").select("id, share_id, name, color, amount, threshold").order("created_at"),
       supabase.from("croin_price_history").select("price").order("created_at", { ascending: false }).limit(1),
     ]);
-    setShares((s as Share[]) ?? []);
+    const sharesData = (s as Share[]) ?? [];
+    setShares(sharesData);
     const map: Record<string, number> = {};
     for (const row of (h as Holding[]) ?? []) map[row.share_id] = row.quantity;
     setHoldings(map);
@@ -141,30 +143,37 @@ export default function Shares({ userId, userEmail, onTrade }: { userId: string;
       (catMap[row.share_id] ??= []).push(row);
     }
     setCategories(catMap);
-    if (cp && cp[0]) setCroinPrice(Number((cp[0] as { price: number }).price) || 1);
-  };
+    const cpVal = cp && cp[0] ? Number((cp[0] as { price: number }).price) || 1 : 1;
+    setCroinPrice(cpVal);
+    writeCache(`shares-${userId}`, {
+      shares: sharesData,
+      holdings: map,
+      history: hist,
+      categories: catMap,
+      croinPrice: cpVal,
+    });
+  }, [userId]);
 
   useEffect(() => {
-    load();
-    const ch = supabase
-      .channel("shares-rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "shares" }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "share_categories" }, () => load())
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "croin_price_history" }, (payload) => {
-        const p = payload.new as { price: number };
-        setCroinPrice(Number(p.price) || 1);
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "share_price_history" }, (payload) => {
-        const p = payload.new as PricePoint;
-        setHistory((prev) => ({
-          ...prev,
-          [p.share_id]: [p, ...(prev[p.share_id] ?? [])].slice(0, 200),
-        }));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+    const cached = readCache<{
+      shares: Share[];
+      holdings: Record<string, number>;
+      history: Record<string, PricePoint[]>;
+      categories: Record<string, Category[]>;
+      croinPrice: number;
+    }>(`shares-${userId}`);
+    if (cached) {
+      setShares(cached.shares);
+      setHoldings(cached.holdings);
+      setHistory(cached.history);
+      setCategories(cached.categories);
+      setCroinPrice(cached.croinPrice);
+    } else {
+      load();
+    }
+  }, [userId, load]);
+
+  useRefreshSignal(load);
 
   // Effective cost = base price × croin price (rounded up), per unit.
   const effUnit = (price: number) => price * croinPrice;

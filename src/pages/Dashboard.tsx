@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import TransactionHistory from "@/components/TransactionHistory";
 import CroinChart from "@/components/CroinChart";
@@ -19,6 +20,7 @@ import RedeemCode from "@/components/RedeemCode";
 import Shares from "@/components/Shares";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStudentRestrictions } from "@/hooks/useStudentRestrictions";
+import { readCache, writeCache, triggerRefresh } from "@/lib/dataCache";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
@@ -29,6 +31,7 @@ export default function Dashboard() {
   const [crossiAiId, setCrossiAiId] = useState("");
   const [saving, setSaving] = useState(false);
   const [croinBalance, setCroinBalance] = useState<number>(0);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const restr = useStudentRestrictions(user?.id);
   const restrReady = !!user && !restr.loading;
@@ -61,13 +64,23 @@ export default function Dashboard() {
       setLoading(false);
       if (!session?.user) navigate("/");
       else {
-        loadProfile(session.user.id);
-        loadBalance(session.user.id);
+        const uid = session.user.id;
+        // Hydrate instantly from device cache; only hit the backend if absent.
+        const cachedProfile = readCache<{ crossChatId: string; crossiAiId: string }>(`profile-${uid}`);
+        if (cachedProfile) {
+          setCrossChatId(cachedProfile.crossChatId);
+          setCrossiAiId(cachedProfile.crossiAiId);
+        } else {
+          loadProfile(uid);
+        }
+        const cachedBalance = readCache<number>(`balance-${uid}`);
+        if (cachedBalance !== null) setCroinBalance(cachedBalance);
+        else loadBalance(uid);
         // route school members to their pages
         supabase
           .from("school_members")
           .select("role")
-          .eq("user_id", session.user.id)
+          .eq("user_id", uid)
           .maybeSingle()
           .then(({ data }) => {
             if (data?.role === "principal") navigate("/school/principal");
@@ -89,6 +102,10 @@ export default function Dashboard() {
     if (data) {
       setCrossChatId(data.cross_chat_id || "");
       setCrossiAiId(data.crossi_ai_id || "");
+      writeCache(`profile-${userId}`, {
+        crossChatId: data.cross_chat_id || "",
+        crossiAiId: data.crossi_ai_id || "",
+      });
     }
   };
 
@@ -99,7 +116,10 @@ export default function Dashboard() {
       .eq("user_id", userId)
       .maybeSingle();
 
-    setCroinBalance(data?.balance ?? 0);
+    const bal = data?.balance ?? 0;
+    setCroinBalance(bal);
+    writeCache(`balance-${userId}`, bal);
+
   };
 
   const handleSave = async () => {
@@ -124,6 +144,15 @@ export default function Dashboard() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleRefresh = async () => {
+    if (!user) return;
+    setRefreshing(true);
+    triggerRefresh();
+    await Promise.all([loadBalance(user.id), loadProfile(user.id)]);
+    setRefreshing(false);
+    toast.success("Refreshed");
   };
 
   if (loading) {
@@ -151,6 +180,17 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="text-muted-foreground gap-1.5"
+              title="Refresh all data from the cloud"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-muted-foreground">
               Settings
             </Button>
