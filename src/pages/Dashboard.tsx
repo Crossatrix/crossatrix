@@ -180,6 +180,17 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="text-muted-foreground gap-1.5"
+              title="Refresh all data from the cloud"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-muted-foreground">
               Settings
             </Button>
