@@ -34,7 +34,7 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
   const isAdmin = userEmail === "cross.a.trix.owner@hotmail.com";
   const isOwner = userEmail === "cross.a.trix.owner@hotmail.com";
 
-  const fetchPrices = async () => {
+  const fetchPrices = useCallback(async () => {
     const { data: prices } = await supabase
       .from("croin_price_history")
       .select("price, created_at")
@@ -42,42 +42,27 @@ export default function CroinChart({ userEmail }: { userEmail?: string }) {
       .limit(50);
 
     if (prices) {
-      setData(
-        [...prices]
-          .reverse()
-          .map((p) => ({
-            time: new Date(p.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            price: Number(p.price),
-          }))
-      );
+      const mapped = [...prices]
+        .reverse()
+        .map((p) => ({
+          time: new Date(p.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          price: Number(p.price),
+        }));
+      setData(mapped);
+      writeCache(CROIN_PRICE_CACHE, mapped);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchPrices();
+    const cached = readCache<PricePoint[]>(CROIN_PRICE_CACHE);
+    if (cached) setData(cached);
+    else fetchPrices();
+  }, [fetchPrices]);
 
-    const channel = supabase
-      .channel("croin-price")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "croin_price_history" },
-        () => fetchPrices()
-      )
-      .subscribe();
-
-    // Trigger micro-fluctuations every 30 seconds
-    const simulationInterval = setInterval(async () => {
-      await supabase.functions.invoke("croin-simulate");
-    }, 30000);
-
-    return () => {
-      supabase.removeChannel(channel);
-      clearInterval(simulationInterval);
-    };
-  }, []);
+  useRefreshSignal(fetchPrices);
 
   const handlePriceChange = async (action: "up" | "down") => {
     setLoading(true);
