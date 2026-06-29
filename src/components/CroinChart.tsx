@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
