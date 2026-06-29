@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { TrendingUp, TrendingDown, Plus, Trash2, Save, Tag } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, ComposedChart, Line, XAxis, YAxis } from "recharts";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 
 const ADMIN = "cross.a.trix.owner@hotmail.com";
 
