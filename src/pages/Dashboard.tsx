@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import TransactionHistory from "@/components/TransactionHistory";
 import CroinChart from "@/components/CroinChart";
@@ -19,6 +20,7 @@ import RedeemCode from "@/components/RedeemCode";
 import Shares from "@/components/Shares";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStudentRestrictions } from "@/hooks/useStudentRestrictions";
+import { readCache, writeCache, triggerRefresh } from "@/lib/dataCache";
 
 const transition = { type: "spring" as const, duration: 0.4, bounce: 0 };
 
