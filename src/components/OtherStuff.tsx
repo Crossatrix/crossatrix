@@ -54,13 +54,23 @@ export default function OtherStuff({ userEmail }: { userEmail?: string | null })
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) toast.error("Failed to load links");
-    setLinks((data as OwnerLink[]) ?? []);
+    const rows = (data as OwnerLink[]) ?? [];
+    setLinks(rows);
+    writeCache("owner-links", rows);
     setLoading(false);
   };
 
   useEffect(() => {
-    load();
+    const cached = readCache<OwnerLink[]>("owner-links");
+    if (cached) {
+      setLinks(cached);
+      setLoading(false);
+    } else {
+      load();
+    }
   }, []);
+
+  useRefreshSignal(load);
 
   const handleAdd = async () => {
     if (!title.trim() || !url.trim()) {
