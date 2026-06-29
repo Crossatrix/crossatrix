@@ -19,6 +19,8 @@ interface PricePoint {
   price: number;
 }
 
+const CROIN_PRICE_CACHE = "croin-price-history";
+
 const chartConfig = {
   price: {
     label: "Price",
