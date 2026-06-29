@@ -52,13 +52,23 @@ export default function Newspaper({ userEmail, userId }: Props) {
       .select("*")
       .order("created_at", { ascending: false });
     if (error) toast.error("Failed to load newspaper");
-    setIssues((data as Issue[]) ?? []);
+    const rows = (data as Issue[]) ?? [];
+    setIssues(rows);
+    writeCache("newspaper-issues", rows);
     setLoading(false);
   };
 
   useEffect(() => {
-    load();
+    const cached = readCache<Issue[]>("newspaper-issues");
+    if (cached) {
+      setIssues(cached);
+      setLoading(false);
+    } else {
+      load();
+    }
   }, []);
+
+  useRefreshSignal(load);
 
   const uploadFile = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "bin";
