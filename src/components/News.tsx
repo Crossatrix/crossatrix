@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Newspaper, Send, Trash2 } from "lucide-react";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 
 const OWNER_EMAIL = "cross.a.trix.owner@hotmail.com";
 
