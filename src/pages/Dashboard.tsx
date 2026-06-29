@@ -64,13 +64,23 @@ export default function Dashboard() {
       setLoading(false);
       if (!session?.user) navigate("/");
       else {
-        loadProfile(session.user.id);
-        loadBalance(session.user.id);
+        const uid = session.user.id;
+        // Hydrate instantly from device cache; only hit the backend if absent.
+        const cachedProfile = readCache<{ crossChatId: string; crossiAiId: string }>(`profile-${uid}`);
+        if (cachedProfile) {
+          setCrossChatId(cachedProfile.crossChatId);
+          setCrossiAiId(cachedProfile.crossiAiId);
+        } else {
+          loadProfile(uid);
+        }
+        const cachedBalance = readCache<number>(`balance-${uid}`);
+        if (cachedBalance !== null) setCroinBalance(cachedBalance);
+        else loadBalance(uid);
         // route school members to their pages
         supabase
           .from("school_members")
           .select("role")
-          .eq("user_id", session.user.id)
+          .eq("user_id", uid)
           .maybeSingle()
           .then(({ data }) => {
             if (data?.role === "principal") navigate("/school/principal");
@@ -92,6 +102,10 @@ export default function Dashboard() {
     if (data) {
       setCrossChatId(data.cross_chat_id || "");
       setCrossiAiId(data.crossi_ai_id || "");
+      writeCache(`profile-${userId}`, {
+        crossChatId: data.cross_chat_id || "",
+        crossiAiId: data.crossi_ai_id || "",
+      });
     }
   };
 
@@ -102,7 +116,10 @@ export default function Dashboard() {
       .eq("user_id", userId)
       .maybeSingle();
 
-    setCroinBalance(data?.balance ?? 0);
+    const bal = data?.balance ?? 0;
+    setCroinBalance(bal);
+    writeCache(`balance-${userId}`, bal);
+
   };
 
   const handleSave = async () => {
