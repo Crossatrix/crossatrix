@@ -146,6 +146,15 @@ export default function Dashboard() {
     navigate("/");
   };
 
+  const handleRefresh = async () => {
+    if (!user) return;
+    setRefreshing(true);
+    triggerRefresh();
+    await Promise.all([loadBalance(user.id), loadProfile(user.id)]);
+    setRefreshing(false);
+    toast.success("Refreshed");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
