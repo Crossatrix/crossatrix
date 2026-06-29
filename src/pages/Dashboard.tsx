@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [crossiAiId, setCrossiAiId] = useState("");
   const [saving, setSaving] = useState(false);
   const [croinBalance, setCroinBalance] = useState<number>(0);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const restr = useStudentRestrictions(user?.id);
   const restrReady = !!user && !restr.loading;
