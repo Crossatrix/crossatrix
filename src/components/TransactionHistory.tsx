@@ -32,12 +32,24 @@ export default function TransactionHistory({ userId }: { userId: string }) {
     const rows = data ?? [];
     setTransactions((prev) => (append ? [...prev, ...rows] : rows));
     setHasMore(rows.length === PAGE_SIZE);
+    if (offset === 0 && !append) writeCache(`tx-${userId}`, rows);
   }, [userId]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchPage(0, false).finally(() => setLoading(false));
-  }, [fetchPage]);
+    const cached = readCache<Transaction[]>(`tx-${userId}`);
+    if (cached) {
+      setTransactions(cached);
+      setHasMore(cached.length === PAGE_SIZE);
+      setLoading(false);
+    } else {
+      setLoading(true);
+      fetchPage(0, false).finally(() => setLoading(false));
+    }
+  }, [userId, fetchPage]);
+
+  useRefreshSignal(() => {
+    fetchPage(0, false);
+  });
 
   const loadMore = async () => {
     setLoadingMore(true);
