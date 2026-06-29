@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { readCache, writeCache, useRefreshSignal } from "@/lib/dataCache";
 
 interface Transaction {
   id: string;
