@@ -72,6 +72,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Account lockdown: block all Croin actions on a locked account.
+    const { data: lockRow } = await supabase
+      .from("account_lockdowns")
+      .select("locked")
+      .eq("user_id", user_id)
+      .maybeSingle();
+    if (lockRow?.locked) {
+      return new Response(
+        JSON.stringify({ error: "Account is locked", code: "account_locked" }),
+        { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+
+
     // Only admins can act on other users' wallets.
     if (user_id !== callerId && !isAdmin) {
       return new Response(
