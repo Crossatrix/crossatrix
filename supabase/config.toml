@@ -39,5 +39,11 @@ verify_jwt = false
 [functions.crossshare-api]
 verify_jwt = false
 
+[functions.account-lockdown]
+verify_jwt = false
+
+[functions.account-unlock]
+verify_jwt = false
+
 
 
