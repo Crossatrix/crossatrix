@@ -70,6 +70,28 @@ export default function AuthPage() {
 
   const [twofaMethod, setTwofaMethod] = useState<"email" | "sms" | "file" | "face" | null>(null);
 
+  const [unlockOpen, setUnlockOpen] = useState(false);
+  const [unlockEmail, setUnlockEmail] = useState("");
+  const [unlockCode, setUnlockCode] = useState("");
+  const [unlockLoading, setUnlockLoading] = useState(false);
+  const [unlockMsg, setUnlockMsg] = useState("");
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUnlockMsg("");
+    setUnlockLoading(true);
+    try {
+      await callFn("account-unlock", { email: unlockEmail, passcode: unlockCode });
+      setUnlockMsg("Account unlocked. You can sign in again.");
+      setUnlockCode("");
+      setTimeout(() => { setUnlockOpen(false); setMode("login"); setEmail(unlockEmail); }, 1200);
+    } catch (err: any) {
+      setUnlockMsg(err.message || "Unlock failed");
+    } finally {
+      setUnlockLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
