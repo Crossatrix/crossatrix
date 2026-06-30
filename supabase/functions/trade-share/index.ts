@@ -52,6 +52,20 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceKey);
+
+    // Account lockdown: block trading on a locked account.
+    const { data: lockRow } = await admin
+      .from("account_lockdowns")
+      .select("locked")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (lockRow?.locked) {
+      return new Response(JSON.stringify({ error: "Account is locked", code: "account_locked" }), {
+        status: 423,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data, error } = await admin.rpc("trade_share", {
       _user: userId,
       _share_id: share_id,
