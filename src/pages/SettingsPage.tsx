@@ -75,6 +75,28 @@ export default function SettingsPage() {
     } catch (e) { toast.error((e as Error).message); }
   };
 
+  const enableLockdown = async () => {
+    if (!lkPassword || lkPasscode.length < 4) {
+      toast.error("Enter your password and a passcode of at least 4 characters");
+      return;
+    }
+    if (lkPasscode !== lkConfirm) {
+      toast.error("Passcodes do not match");
+      return;
+    }
+    setLkLoading(true);
+    try {
+      await callFn("account-lockdown", { password: lkPassword, passcode: lkPasscode });
+      toast.success("Account locked down. Signing out everywhere…");
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLkLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen px-4 py-8 md:py-16">
       <div className="max-w-lg mx-auto space-y-6">
