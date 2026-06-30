@@ -38,6 +38,11 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [twofa, setTwofa] = useState<{ method: Method | null; enabled: boolean }>({ method: null, enabled: false });
   const [picker, setPicker] = useState<Method | null>(null);
+  const [showLockdown, setShowLockdown] = useState(false);
+  const [lkPassword, setLkPassword] = useState("");
+  const [lkPasscode, setLkPasscode] = useState("");
+  const [lkConfirm, setLkConfirm] = useState("");
+  const [lkLoading, setLkLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
