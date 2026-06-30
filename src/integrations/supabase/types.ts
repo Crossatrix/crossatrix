@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_lockdowns: {
+        Row: {
+          created_at: string
+          locked: boolean
+          locked_at: string | null
+          passcode_hash: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          locked?: boolean
+          locked_at?: string | null
+          passcode_hash?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          locked?: boolean
+          locked_at?: string | null
+          passcode_hash?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bug_apps: {
         Row: {
           created_at: string
