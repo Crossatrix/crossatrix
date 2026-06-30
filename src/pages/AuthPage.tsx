@@ -295,7 +295,7 @@ export default function AuthPage() {
         </div>
 
         {mode === "login" && (
-          <div className="mt-2 text-center">
+          <div className="mt-2 text-center flex flex-col gap-1">
             <button
               type="button"
               onClick={() => navigate("/trouble")}
@@ -303,8 +303,16 @@ export default function AuthPage() {
             >
               Trouble signing in?
             </button>
+            <button
+              type="button"
+              onClick={() => { setUnlockOpen(true); setUnlockEmail(email); setUnlockMsg(""); }}
+              className="text-xs text-muted-foreground/60 hover:text-destructive transition-brand"
+            >
+              Account locked? Unlock with passcode
+            </button>
           </div>
         )}
+
 
         {/* Footer */}
         <div className="mt-12 pt-6 border-t border-border space-y-2">
