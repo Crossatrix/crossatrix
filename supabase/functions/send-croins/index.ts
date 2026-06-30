@@ -43,6 +43,21 @@ Deno.serve(async (req) => {
     const senderId = claimsData.claims.sub as string;
     const senderEmail = claimsData.claims.email as string;
 
+    // Account lockdown: a locked sender cannot move Croins.
+    const { data: senderLock } = await supabase
+      .from("account_lockdowns")
+      .select("locked")
+      .eq("user_id", senderId)
+      .maybeSingle();
+    if (senderLock?.locked) {
+      return new Response(JSON.stringify({ error: "Account is locked", code: "account_locked" }), {
+        status: 423,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
+
     const { recipient_email, amount, reason } = await req.json();
     const reasonSuffix = reason && typeof reason === "string" ? ` — ${reason.trim()}` : "";
 
@@ -87,6 +102,21 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Account lockdown: cannot send Croins to a locked account.
+    const { data: recipientLock } = await supabase
+      .from("account_lockdowns")
+      .select("locked")
+      .eq("user_id", recipient.id)
+      .maybeSingle();
+    if (recipientLock?.locked) {
+      return new Response(JSON.stringify({ error: "Recipient account is locked", code: "account_locked" }), {
+        status: 423,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
 
     // Atomic transfer (locks sender row, prevents double-spend)
     const { error: transferError } = await supabase.rpc("transfer_croins", {

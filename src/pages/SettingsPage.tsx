@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -36,6 +38,11 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [twofa, setTwofa] = useState<{ method: Method | null; enabled: boolean }>({ method: null, enabled: false });
   const [picker, setPicker] = useState<Method | null>(null);
+  const [showLockdown, setShowLockdown] = useState(false);
+  const [lkPassword, setLkPassword] = useState("");
+  const [lkPasscode, setLkPasscode] = useState("");
+  const [lkConfirm, setLkConfirm] = useState("");
+  const [lkLoading, setLkLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,6 +73,28 @@ export default function SettingsPage() {
       toast.success("2-Step Authentication disabled");
       if (user) loadTwofa(user.id);
     } catch (e) { toast.error((e as Error).message); }
+  };
+
+  const enableLockdown = async () => {
+    if (!lkPassword || lkPasscode.length < 4) {
+      toast.error("Enter your password and a passcode of at least 4 characters");
+      return;
+    }
+    if (lkPasscode !== lkConfirm) {
+      toast.error("Passcodes do not match");
+      return;
+    }
+    setLkLoading(true);
+    try {
+      await callFn("account-lockdown", { password: lkPassword, passcode: lkPasscode });
+      toast.success("Account locked down. Signing out everywhere…");
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLkLoading(false);
+    }
   };
 
   return (
@@ -109,7 +138,68 @@ export default function SettingsPage() {
             </div>
           )}
         </section>
+
+        <section className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 shadow-vault space-y-4">
+          <div>
+            <h2 className="text-sm font-mono uppercase tracking-widest text-destructive">Account Lockdown</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Instantly sign out everywhere, disable 2-Step Authentication, and block all Croin and login
+              activity (the API returns <span className="font-mono">423 Locked</span>). Your account can only be
+              unlocked again with the passcode you set below — keep it safe.
+            </p>
+          </div>
+
+          {!showLockdown ? (
+            <Button variant="destructive" className="w-full" onClick={() => setShowLockdown(true)}>
+              Lock down my account
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="lk-password">Confirm password</Label>
+                <Input
+                  id="lk-password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Your account password"
+                  value={lkPassword}
+                  onChange={(e) => setLkPassword(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lk-passcode">Unlock passcode</Label>
+                <Input
+                  id="lk-passcode"
+                  type="password"
+                  placeholder="Set a passcode (min 4 chars)"
+                  value={lkPasscode}
+                  onChange={(e) => setLkPasscode(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lk-confirm">Confirm passcode</Label>
+                <Input
+                  id="lk-confirm"
+                  type="password"
+                  placeholder="Re-enter the passcode"
+                  value={lkConfirm}
+                  onChange={(e) => setLkConfirm(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" className="flex-1" disabled={lkLoading}
+                  onClick={() => { setShowLockdown(false); setLkPassword(""); setLkPasscode(""); setLkConfirm(""); }}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" className="flex-1" disabled={lkLoading} onClick={enableLockdown}>
+                  {lkLoading ? "Locking…" : "Confirm lockdown"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
+
 
       <Suspense fallback={null}>
         <TwoFactorSetup

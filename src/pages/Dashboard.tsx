@@ -65,6 +65,17 @@ export default function Dashboard() {
       if (!session?.user) navigate("/");
       else {
         const uid = session.user.id;
+        // Account lockdown: if this account is locked, sign out immediately.
+        supabase
+          .from("account_lockdowns")
+          .select("locked")
+          .eq("user_id", uid)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.locked) {
+              supabase.auth.signOut().then(() => navigate("/"));
+            }
+          });
         // Hydrate instantly from device cache; only hit the backend if absent.
         const cachedProfile = readCache<{ crossChatId: string; crossiAiId: string }>(`profile-${uid}`);
         if (cachedProfile) {

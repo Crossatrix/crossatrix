@@ -26,6 +26,26 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+    // Account lockdown: refuse login for a locked account.
+    const lockAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: lockList } = await lockAdmin.auth.admin.listUsers();
+    const lockUser = lockList?.users.find((u) => u.email?.toLowerCase() === String(email).toLowerCase());
+    if (lockUser) {
+      const { data: lockRow } = await lockAdmin
+        .from("account_lockdowns")
+        .select("locked")
+        .eq("user_id", lockUser.id)
+        .maybeSingle();
+      if (lockRow?.locked) {
+        return new Response(
+          JSON.stringify({ error: "Account is locked", code: "account_locked" }),
+          { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
