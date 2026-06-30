@@ -131,6 +131,68 @@ export default function AuthPage() {
     );
   }
 
+  if (unlockOpen) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, duration: 0.6 }}
+          className="w-full max-w-[400px]"
+        >
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-2 w-2 rounded-full bg-destructive" />
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                Account Locked
+              </span>
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight-brand text-foreground">
+              Unlock your account.
+            </h1>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              Enter your email and the passcode you set when locking down your account.
+            </p>
+          </div>
+
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={unlockEmail}
+              onChange={(e) => setUnlockEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <Input
+              type="password"
+              placeholder="Unlock passcode"
+              value={unlockCode}
+              onChange={(e) => setUnlockCode(e.target.value)}
+              required
+            />
+            {unlockMsg && <p className="text-sm text-muted-foreground">{unlockMsg}</p>}
+            <Button type="submit" variant="signal" className="w-full" disabled={unlockLoading}>
+              {unlockLoading ? "Unlocking…" : "Unlock account"}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => { setUnlockOpen(false); setUnlockMsg(""); }}
+              className="text-sm text-muted-foreground hover:text-primary transition-brand"
+            >
+              Back to sign in
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <motion.div
