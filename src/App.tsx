@@ -20,6 +20,7 @@ import PrincipalPage from "./pages/school/PrincipalPage";
 import SchoolsAdminPage from "./pages/school/SchoolsAdminPage";
 import NotFound from "./pages/NotFound";
 import PwaInstallBanner from "./components/PwaInstallBanner";
+import SiteGate from "./components/SiteGate";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <SiteGate>
         <Routes>
           <Route path="/" element={<AuthPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
