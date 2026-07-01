@@ -4,8 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+
+const ADMIN_EMAILS = [
+  "cross.a.trix.owner@hotmail.com",
+  "moritz.loeseke7@gmail.com",
+];
 
 const TwoFactorSetup = lazy(() => import("@/components/TwoFactorSetup"));
 
@@ -43,6 +49,9 @@ export default function SettingsPage() {
   const [lkPasscode, setLkPasscode] = useState("");
   const [lkConfirm, setLkConfirm] = useState("");
   const [lkLoading, setLkLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [siteDisabled, setSiteDisabled] = useState(false);
+  const [siteBusy, setSiteBusy] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +59,9 @@ export default function SettingsPage() {
       if (!session?.user) { navigate("/"); return; }
       setUser(session.user);
       loadTwofa(session.user.id);
+      const admin = ADMIN_EMAILS.includes(session.user.email?.toLowerCase() ?? "");
+      setIsAdmin(admin);
+      if (admin) loadSite();
     });
   }, [navigate]);
 
@@ -57,6 +69,21 @@ export default function SettingsPage() {
     const { data } = await supabase.from("user_2fa").select("method,enabled").eq("user_id", uid).maybeSingle();
     setTwofa({ method: (data?.method as Method) ?? null, enabled: !!data?.enabled });
   };
+
+  const loadSite = async () => {
+    const { data } = await supabase.from("site_settings").select("disabled").eq("id", 1).maybeSingle();
+    setSiteDisabled(!!data?.disabled);
+  };
+
+  const toggleSite = async (next: boolean) => {
+    setSiteBusy(true);
+    const { error } = await supabase.from("site_settings").update({ disabled: next, updated_at: new Date().toISOString() }).eq("id", 1);
+    setSiteBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setSiteDisabled(next);
+    toast.success(next ? "Site disabled for everyone" : "Site re-enabled");
+  };
+
 
   const changePassword = async () => {
     if (!user?.email) return;
@@ -138,6 +165,27 @@ export default function SettingsPage() {
             </div>
           )}
         </section>
+
+        {isAdmin && (
+          <section className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 shadow-vault space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-mono uppercase tracking-widest text-destructive">Site Kill Switch</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Admin only. When on, the entire app stops working for everyone — the site shows a generic
+                  error and every API returns <span className="font-mono">404 Not Found</span>. Only admins can
+                  turn this back off.
+                </p>
+              </div>
+              <Switch checked={siteDisabled} disabled={siteBusy} onCheckedChange={toggleSite} />
+            </div>
+            <p className={`text-xs font-mono ${siteDisabled ? "text-destructive" : "text-muted-foreground"}`}>
+              {siteDisabled ? "SITE DISABLED" : "SITE ONLINE"}
+            </p>
+          </section>
+        )}
+
+
 
         <section className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 shadow-vault space-y-4">
           <div>

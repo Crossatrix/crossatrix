@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isSiteDisabled, siteDisabledResponse } from "../_shared/killswitch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (await isSiteDisabled()) return siteDisabledResponse(corsHeaders);
 
   try {
     const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
