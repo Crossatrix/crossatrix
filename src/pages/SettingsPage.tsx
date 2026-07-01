@@ -49,6 +49,9 @@ export default function SettingsPage() {
   const [lkPasscode, setLkPasscode] = useState("");
   const [lkConfirm, setLkConfirm] = useState("");
   const [lkLoading, setLkLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [siteDisabled, setSiteDisabled] = useState(false);
+  const [siteBusy, setSiteBusy] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,6 +59,9 @@ export default function SettingsPage() {
       if (!session?.user) { navigate("/"); return; }
       setUser(session.user);
       loadTwofa(session.user.id);
+      const admin = ADMIN_EMAILS.includes(session.user.email?.toLowerCase() ?? "");
+      setIsAdmin(admin);
+      if (admin) loadSite();
     });
   }, [navigate]);
 
@@ -63,6 +69,21 @@ export default function SettingsPage() {
     const { data } = await supabase.from("user_2fa").select("method,enabled").eq("user_id", uid).maybeSingle();
     setTwofa({ method: (data?.method as Method) ?? null, enabled: !!data?.enabled });
   };
+
+  const loadSite = async () => {
+    const { data } = await supabase.from("site_settings").select("disabled").eq("id", 1).maybeSingle();
+    setSiteDisabled(!!data?.disabled);
+  };
+
+  const toggleSite = async (next: boolean) => {
+    setSiteBusy(true);
+    const { error } = await supabase.from("site_settings").update({ disabled: next, updated_at: new Date().toISOString() }).eq("id", 1);
+    setSiteBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setSiteDisabled(next);
+    toast.success(next ? "Site disabled for everyone" : "Site re-enabled");
+  };
+
 
   const changePassword = async () => {
     if (!user?.email) return;
