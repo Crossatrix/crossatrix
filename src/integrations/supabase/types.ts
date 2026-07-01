@@ -726,6 +726,24 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          disabled: boolean
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          disabled?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          disabled?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_restrictions: {
         Row: {
           class_id: string
