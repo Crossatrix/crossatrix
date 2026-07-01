@@ -166,6 +166,27 @@ export default function SettingsPage() {
           )}
         </section>
 
+        {isAdmin && (
+          <section className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 shadow-vault space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-mono uppercase tracking-widest text-destructive">Site Kill Switch</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Admin only. When on, the entire app stops working for everyone — the site shows a generic
+                  error and every API returns <span className="font-mono">404 Not Found</span>. Only admins can
+                  turn this back off.
+                </p>
+              </div>
+              <Switch checked={siteDisabled} disabled={siteBusy} onCheckedChange={toggleSite} />
+            </div>
+            <p className={`text-xs font-mono ${siteDisabled ? "text-destructive" : "text-muted-foreground"}`}>
+              {siteDisabled ? "SITE DISABLED" : "SITE ONLINE"}
+            </p>
+          </section>
+        )}
+
+
+
         <section className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 shadow-vault space-y-4">
           <div>
             <h2 className="text-sm font-mono uppercase tracking-widest text-destructive">Account Lockdown</h2>
