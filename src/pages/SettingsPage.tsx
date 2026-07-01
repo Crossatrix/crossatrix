@@ -4,8 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+
+const ADMIN_EMAILS = [
+  "cross.a.trix.owner@hotmail.com",
+  "moritz.loeseke7@gmail.com",
+];
 
 const TwoFactorSetup = lazy(() => import("@/components/TwoFactorSetup"));
 
