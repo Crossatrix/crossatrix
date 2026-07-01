@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isSiteDisabled, siteDisabledResponse } from "../_shared/killswitch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,7 @@ async function getCaller(req: Request) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (await isSiteDisabled()) return siteDisabledResponse(corsHeaders);
 
   try {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
