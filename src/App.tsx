@@ -56,6 +56,7 @@ const App = () => (
           <Route path="/school/admin" element={<SchoolsAdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </SiteGate>
         <PwaInstallBanner />
       </BrowserRouter>
     </TooltipProvider>
