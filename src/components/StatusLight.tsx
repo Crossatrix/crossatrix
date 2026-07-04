@@ -53,6 +53,24 @@ export default function StatusLight() {
     load();
   }, []);
 
+  // Automatic polling: refresh service health every 30s and when the tab
+  // regains focus. Paused while the panel is open so it never clobbers an
+  // admin's unsaved edits.
+  useEffect(() => {
+    const tick = () => {
+      if (!open) load();
+    };
+    const id = window.setInterval(tick, 30_000);
+    const onFocus = () => tick();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [open]);
+
   const save = async () => {
     setSaving(true);
     const clean = items
