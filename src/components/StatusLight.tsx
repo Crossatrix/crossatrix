@@ -32,6 +32,7 @@ export default function StatusLight() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
