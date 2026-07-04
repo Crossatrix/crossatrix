@@ -744,6 +744,27 @@ export type Database = {
         }
         Relationships: []
       }
+      status_light: {
+        Row: {
+          color: string
+          id: number
+          items: Json
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          id?: number
+          items?: Json
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          id?: number
+          items?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_restrictions: {
         Row: {
           class_id: string
