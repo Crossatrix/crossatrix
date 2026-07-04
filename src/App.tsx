@@ -21,6 +21,7 @@ import SchoolsAdminPage from "./pages/school/SchoolsAdminPage";
 import NotFound from "./pages/NotFound";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 import SiteGate from "./components/SiteGate";
+import StatusLight from "./components/StatusLight";
 
 const queryClient = new QueryClient();
 
