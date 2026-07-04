@@ -32,6 +32,7 @@ export default function StatusLight() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
@@ -52,6 +53,24 @@ export default function StatusLight() {
     });
     load();
   }, []);
+
+  // Automatic polling: refresh service health every 30s and when the tab
+  // regains focus. Paused while the panel is open so it never clobbers an
+  // admin's unsaved edits.
+  useEffect(() => {
+    const tick = () => {
+      if (!open) load();
+    };
+    const id = window.setInterval(tick, 30_000);
+    const onFocus = () => tick();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [open]);
 
   const save = async () => {
     setSaving(true);
@@ -75,13 +94,21 @@ export default function StatusLight() {
 
   return (
     <div className="fixed top-3 right-3 z-[60]">
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
             aria-label="System status"
-            className="h-4 w-4 rounded-full border border-border/60 shadow-vault transition-transform hover:scale-110"
-            style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
-          />
+            className="relative flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-card/80 shadow-vault backdrop-blur transition-transform hover:scale-110"
+          >
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
+            />
+            <span
+              className="absolute inline-flex h-3 w-3 animate-ping rounded-full opacity-60"
+              style={{ backgroundColor: color }}
+            />
+          </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-72 space-y-3">
           <div className="flex items-center gap-2">
