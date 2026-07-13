@@ -48,6 +48,9 @@ verify_jwt = false
 [functions.news-api]
 verify_jwt = false
 
+[functions.user-shares-api]
+verify_jwt = false
+
 
 
 
