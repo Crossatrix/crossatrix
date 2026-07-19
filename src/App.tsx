@@ -32,6 +32,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <SiteGate>
+        <main>
         <Routes>
           <Route path="/" element={<AuthPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -57,6 +58,7 @@ const App = () => (
           <Route path="/school/admin" element={<SchoolsAdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </main>
         </SiteGate>
         <StatusLight />
         <PwaInstallBanner />
