@@ -13,6 +13,12 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    minify: "terser",
+    terserOptions: {
+      compress: { passes: 2 },
+    },
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
