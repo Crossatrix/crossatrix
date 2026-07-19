@@ -1,0 +1,18 @@
+# Crossatrix
+
+> Crossatrix is the identity nexus and Croin dashboard for the Cross-A ecosystem — manage your wallet, trade shares, redeem codes, read news, and secure your account.
+
+Crossatrix issues a unified identity used across Cross-Chat, Crossi-AI, and Crosssino, and tracks the shared Croin (¢) currency: peer-to-peer transfers, live Croin market pricing, per-user share trading, referral rewards, and redeemable Croin codes. It also hosts a news feed, a newspaper, and a school-management module for teachers, principals, and students.
+
+## Pages
+
+- [Home](/): Sign in or provision a Crossatrix identity for the Cross-A ecosystem.
+- [News](/news): Latest ecosystem news posts and newspaper issues.
+- [Info](/info): About Crossatrix and how the platform works.
+- [Share](/share): Share Crossatrix with others.
+- [Register a school](/school/new-school): Create a new school on Crossatrix.
+- [Teacher / Student login](/school/teacher): Sign in for school teachers and students.
+
+## Optional
+
+- [Bug reports](/bug): Report a bug in the Crossatrix ecosystem.

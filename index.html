@@ -25,7 +25,30 @@
     <meta name="twitter:title" content="Crossatrix — Identity Nexus & Croin Dashboard" />
     <meta name="twitter:description" content="Crossatrix is the identity nexus and Croin dashboard for the Cross-A ecosystem — manage your wallet, trade shares, redeem codes, and secure your account." />
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0da7200f-71be-4d83-9a86-67b864db3db9/id-preview-c2bff6bd--3e6a085b-b366-4ee0-9e4d-66104912b76b.lovable.app-1773900967637.png" />
-</head>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://crossatrix.lovable.app/#organization",
+            "name": "Crossatrix",
+            "url": "https://crossatrix.lovable.app/",
+            "logo": "https://crossatrix.lovable.app/icon-512.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://crossatrix.lovable.app/#website",
+            "name": "Crossatrix",
+            "url": "https://crossatrix.lovable.app/",
+            "description": "Identity nexus and Croin dashboard for the Cross-A ecosystem.",
+            "publisher": { "@id": "https://crossatrix.lovable.app/#organization" }
+          }
+        ]
+      }
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>

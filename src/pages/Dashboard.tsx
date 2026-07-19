@@ -354,7 +354,7 @@ export default function Dashboard() {
 
         {/* Footer */}
         <div className="mt-10 pt-6 border-t border-border">
-          <p className="text-xs text-muted-foreground/50 font-mono text-center">
+          <p className="text-xs text-muted-foreground font-mono text-center">
             crossatrix.identity.v1
           </p>
         </div>
