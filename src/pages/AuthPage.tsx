@@ -321,7 +321,7 @@ export default function AuthPage() {
             <span>•</span>
             <button type="button" onClick={() => navigate("/school/teacher")} className="hover:text-primary transition-brand">Teacher / Student login</button>
           </div>
-          <p className="text-xs text-muted-foreground/50 font-mono text-center">
+          <p className="text-xs text-muted-foreground font-mono text-center">
             crossatrix.identity.v1 • encrypted at rest
           </p>
         </div>
