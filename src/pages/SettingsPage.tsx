@@ -14,6 +14,7 @@ const ADMIN_EMAILS = [
 ];
 
 const TwoFactorSetup = lazy(() => import("@/components/TwoFactorSetup"));
+const Loginnames = lazy(() => import("@/components/Loginnames"));
 
 type Method = "email" | "sms" | "file" | "face";
 
