@@ -875,6 +875,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_loginnames: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slot_index: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slot_index: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slot_index?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           balance: number
@@ -931,7 +955,17 @@ export type Database = {
           max_uses: number
         }[]
       }
+      purchase_loginname: {
+        Args: { _name: string; _user: string }
+        Returns: {
+          cost: number
+          id: string
+          name: string
+          slot_index: number
+        }[]
+      }
       recompute_share_price: { Args: { _share_id: string }; Returns: undefined }
+      resolve_loginname_to_user: { Args: { _name: string }; Returns: string }
       simulate_croin_price: { Args: never; Returns: undefined }
       trade_share: {
         Args: {
