@@ -144,6 +144,10 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        <Suspense fallback={null}>
+          <Loginnames />
+        </Suspense>
+
         <section className="p-6 rounded-2xl border border-border bg-card shadow-vault space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono uppercase tracking-widest text-muted-foreground">2-Step Authentication</h2>
