@@ -33,20 +33,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { email, password } = await req.json();
-    if (!email || !password) {
+    const body = await req.json();
+    const identifier: string = body.email ?? body.username ?? body.loginname ?? "";
+    const password: string = body.password ?? "";
+    if (!identifier || !password) {
       return new Response(
-        JSON.stringify({ error: "Email and password are required" }),
+        JSON.stringify({ error: "Email/username and password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabase = createClient(supabaseUrl, anonKey);
+    const lockAdmin = createClient(supabaseUrl, serviceKey);
+
+    let email = identifier.trim();
+    if (!email.includes("@")) {
+      const { data: uid } = await lockAdmin.rpc("resolve_loginname_to_user", { _name: email });
+      if (!uid) {
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: uinfo } = await lockAdmin.auth.admin.getUserById(uid as string);
+      if (!uinfo?.user?.email) {
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      email = uinfo.user.email;
+    }
 
     // Account lockdown: refuse login for a locked account.
-    const lockAdmin = createClient(supabaseUrl, serviceKey);
     const { data: lockList } = await lockAdmin.auth.admin.listUsers();
-    const lockUser = lockList?.users.find((u) => u.email?.toLowerCase() === String(email).toLowerCase());
+    const lockUser = lockList?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
     if (lockUser) {
       const { data: lockRow } = await lockAdmin
         .from("account_lockdowns")

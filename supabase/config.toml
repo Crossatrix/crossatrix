@@ -51,6 +51,9 @@ verify_jwt = false
 [functions.user-shares-api]
 verify_jwt = false
 
+[functions.loginname-purchase]
+verify_jwt = false
+
 
 
 
