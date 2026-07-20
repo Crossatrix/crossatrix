@@ -14,11 +14,13 @@ Deno.serve(async (req) => {
   if (await isSiteDisabled()) return siteDisabledResponse(corsHeaders);
 
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const identifier: string = body.email ?? body.username ?? body.loginname ?? "";
+    const password: string = body.password ?? "";
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return new Response(
-        JSON.stringify({ error: "Email and password are required" }),
+        JSON.stringify({ error: "Email/username and password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -27,11 +29,25 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const lockAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Resolve loginname -> email if identifier has no @
+    let email = identifier.trim();
+    if (!email.includes("@")) {
+      const { data: uid } = await lockAdmin.rpc("resolve_loginname_to_user", { _name: email });
+      if (!uid) {
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: uinfo } = await lockAdmin.auth.admin.getUserById(uid as string);
+      if (!uinfo?.user?.email) {
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      email = uinfo.user.email;
+    }
 
     // Account lockdown: refuse login for a locked account.
-    const lockAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: lockList } = await lockAdmin.auth.admin.listUsers();
-    const lockUser = lockList?.users.find((u) => u.email?.toLowerCase() === String(email).toLowerCase());
+    const lockUser = lockList?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
     if (lockUser) {
       const { data: lockRow } = await lockAdmin
         .from("account_lockdowns")
