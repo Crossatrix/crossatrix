@@ -103,8 +103,18 @@ export default function AuthPage() {
         if (error) throw error;
         navigate("/dashboard");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (email.includes("@")) {
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+        } else {
+          const r = await callFn("crossatrix-login", { username: email, password });
+          if (!r.access_token) throw new Error(r.error || "Invalid credentials");
+          const { error: sErr } = await supabase.auth.setSession({
+            access_token: r.access_token,
+            refresh_token: r.refresh_token,
+          });
+          if (sErr) throw sErr;
+        }
         // Check if 2FA required
         const r = await callFn("twofa-challenge");
         if (r.required) setTwofaMethod(r.method);
