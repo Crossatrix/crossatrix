@@ -240,12 +240,12 @@ export default function AuthPage() {
         >
           <div>
             <Input
-              type="email"
-              placeholder="Email address"
+              type={mode === "signup" ? "email" : "text"}
+              placeholder={mode === "signup" ? "Email address" : "Email or loginname"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete={mode === "signup" ? "email" : "username"}
             />
           </div>
           <div>
