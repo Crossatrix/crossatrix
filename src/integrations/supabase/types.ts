@@ -317,6 +317,146 @@ export type Database = {
         }
         Relationships: []
       }
+      loan_appeals: {
+        Row: {
+          admin_reply: string | null
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_reply?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_reply?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loan_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          loan_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kind?: string
+          loan_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          loan_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_payments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_penalties: {
+        Row: {
+          created_at: string
+          last_miss_at: string | null
+          lock_level: number
+          misses: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_miss_at?: string | null
+          lock_level?: number
+          misses?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_miss_at?: string | null
+          lock_level?: number
+          misses?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          created_at: string
+          id: string
+          instalment: number
+          next_due_at: string
+          overdue: number
+          principal: number
+          remaining: number
+          schedule: string
+          status: string
+          total_owed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instalment: number
+          next_due_at: string
+          overdue?: number
+          principal: number
+          remaining: number
+          schedule: string
+          status?: string
+          total_owed: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instalment?: number
+          next_due_at?: string
+          overdue?: number
+          principal?: number
+          remaining?: number
+          schedule?: string
+          status?: string
+          total_owed?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       news_posts: {
         Row: {
           body: string
@@ -940,6 +1080,17 @@ export type Database = {
         Args: { _class: string; _uid: string }
         Returns: boolean
       }
+      loan_lock_level: { Args: { _user: string }; Returns: number }
+      loan_register_miss: { Args: { _user: string }; Returns: undefined }
+      loan_sweep: { Args: { _user: string }; Returns: undefined }
+      pay_loan: {
+        Args: { _amount: number; _loan: string; _user: string }
+        Returns: {
+          overdue: number
+          remaining: number
+          status: string
+        }[]
+      }
       purchase_croin_code: {
         Args: {
           _amount: number
@@ -967,6 +1118,15 @@ export type Database = {
       recompute_share_price: { Args: { _share_id: string }; Returns: undefined }
       resolve_loginname_to_user: { Args: { _name: string }; Returns: string }
       simulate_croin_price: { Args: never; Returns: undefined }
+      take_loan: {
+        Args: { _amount: number; _schedule: string; _user: string }
+        Returns: {
+          instalment: number
+          loan_id: string
+          next_due_at: string
+          total_owed: number
+        }[]
+      }
       trade_share: {
         Args: {
           _quantity: number
