@@ -58,6 +58,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Loan enforcement: settle anything due, then block transfers after 2 missed payments.
+    await supabase.rpc("loan_sweep", { _user: senderId });
+    const { data: senderPenalty } = await supabase
+      .from("loan_penalties")
+      .select("lock_level")
+      .eq("user_id", senderId)
+      .maybeSingle();
+    if ((senderPenalty?.lock_level ?? 0) >= 2) {
+      return new Response(
+        JSON.stringify({ error: "Croin transfers locked due to missed loan payments", code: "loan_overdue" }),
+        { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
 
     const { recipient_email, amount, reason } = await req.json();
