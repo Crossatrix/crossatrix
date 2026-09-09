@@ -87,6 +87,20 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Loan enforcement: settle anything due, then block if payments were missed twice.
+    await supabase.rpc("loan_sweep", { _user: user_id });
+    const { data: penalty } = await supabase
+      .from("loan_penalties")
+      .select("lock_level")
+      .eq("user_id", user_id)
+      .maybeSingle();
+    if ((penalty?.lock_level ?? 0) >= 2) {
+      return new Response(
+        JSON.stringify({ error: "Croin actions locked due to missed loan payments", code: "loan_overdue" }),
+        { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
 
     // Only admins can act on other users' wallets.
