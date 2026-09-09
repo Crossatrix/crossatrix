@@ -54,6 +54,13 @@ verify_jwt = false
 [functions.loginname-purchase]
 verify_jwt = false
 
+[functions.loans]
+verify_jwt = false
+
+[functions.loan-admin]
+verify_jwt = false
+
+
 
 
 
