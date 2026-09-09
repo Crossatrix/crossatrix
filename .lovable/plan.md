@@ -1,80 +1,47 @@
-# Settings & 2-Step Authentication
+# Croin Loans
 
-Add a Settings button on the Dashboard that opens a `/settings` page. From there, the user can change their password and enable/disable 2-Step Authentication using one of four methods.
+Let users borrow Croins and pay them back in instalments, with escalating consequences for missed payments and an admin panel to unlock and review appeals.
 
-## 1. Settings entry point
+## Borrowing
 
-- Add a gear icon `Button` next to "Sign Out" in `src/pages/Dashboard.tsx` header → navigates to `/settings`.
-- New route `/settings` → `SettingsPage.tsx` (registered in `src/App.tsx`).
+- Anyone signed in can take a loan at any time.
+- Up to 3 active loans at once, and at most 30,000 Croins of outstanding debt across all of them together.
+- A one-time 5% fee is added when the loan is taken: borrow 10,000 and you owe 10,500.
+- When taking a loan the user picks a schedule:
+  - Weekly: pay at least 2% of the original total each week.
+  - Monthly: pay at least 5% of the original total each month.
+- The borrowed amount lands in the wallet immediately and shows in the transaction history.
 
-## 2. Settings page layout
+## Repaying
 
-Vault-styled card with sections:
-- **Account** → "Change Password" button → `navigate("/reset-password")` after triggering `supabase.auth.resetPasswordForEmail(user.email)` so the recovery link works (or just redirect if already signed in and let the existing reset flow handle it).
-- **2-Step Authentication** → shows current method (or "Disabled"), with a "Configure" button opening a method picker:
-  1. Email (Mailjet)
-  2. SMS (seven.io)
-  3. Account File (`Account.crossauth`)
-  4. Face Scan
+- When an instalment falls due it is charged automatically from the wallet if the balance covers it.
+- A "Pay now" button lets users pay early, pay extra, or clear the whole loan at once.
+- A loan closes automatically once the balance reaches zero.
 
-Only one method active at a time (can switch).
+## Missed payments
 
-## 3. Database
+A payment is missed when it is due and the wallet cannot cover it.
 
-New table `user_2fa`:
-- `user_id` (uuid, unique, references auth user)
-- `method` ('email' | 'sms' | 'file' | 'face' | null)
-- `phone` (text, nullable — for SMS)
-- `secret_key` (text, nullable — for file method, random 32-byte hex)
-- `face_descriptor` (jsonb, nullable — face-api.js 128-float vector)
-- `enabled` (bool)
-- `created_at`, `updated_at`
+- 1 miss: warning shown on the dashboard and in the loan panel.
+- 2 misses: Croin transfers and the Croin API are locked for that account until the overdue amount is paid. Everything else keeps working.
+- 3 misses: the account is locked (same lockdown behaviour as today) and can only be reopened by an admin.
+- Paying off the overdue amount clears a level-2 lock straight away. A level-3 lock always needs an admin.
 
-New table `user_2fa_challenges` (short-lived OTP store):
-- `user_id`, `code_hash`, `method`, `expires_at`, `consumed`
+## Appeals
 
-RLS: users can read/update only their own row. Service role writes challenges.
+- A locked user sees a form to write a message to support.
+- Admins (moritz.loeseke7@gmail.com, cross.a.trix.owner@hotmail.com) get a panel listing appeals with the user's loans and miss count, and can reply, unlock the account, or forgive/reset misses.
 
-## 4. Edge functions
+## Where it lives
 
-All use `verify_jwt = false` + manual JWT validation via `auth.getClaims` (case-insensitive Authorization header), permissive CORS — matches existing ecosystem pattern.
-
-- **`twofa-setup`** — start enrollment. Body: `{ method, phone? }`. For email/sms: generates 6-digit code, stores hash in `user_2fa_challenges`, sends via Mailjet/seven.io. For file: generates `secret_key`, returns it once so the client can download `Account.crossauth`. For face: returns OK; client posts descriptor in step 2.
-- **`twofa-verify-setup`** — confirms enrollment. Body: `{ method, code? | secret_key? | face_descriptor? }`. On success, writes/updates `user_2fa` with `enabled=true`.
-- **`twofa-challenge`** — request a verification (used at sign-in or sensitive action). Sends OTP for email/sms; returns nonce for file/face.
-- **`twofa-verify`** — verifies the response (code, file secret, or face descriptor distance ≤ 0.5).
-- **`twofa-disable`** — turns it off after a successful verify.
-
-Mailjet uses `MAILJET_KEY` + `MAILJET_SECRET` (already in secrets). seven.io uses `SEVENOI_KEY` (already in secrets).
-
-## 5. Frontend components
-
-- `src/pages/SettingsPage.tsx` — sections + status.
-- `src/components/TwoFactorSetup.tsx` — modal/sheet driving the 4-method flow:
-  - **Email**: confirm email → send code → enter code → enable.
-  - **SMS**: enter phone (E.164) → send code → enter code → enable.
-  - **File**: generate key → download `Account.crossauth` (JSON: `{ user_id, secret_key, created_at }`) → confirm by re-uploading → enable.
-  - **Face**: load `face-api.js` (tiny face detector + face recognition models from CDN), capture webcam frame, compute 128-d descriptor, store → enable.
-- `src/components/TwoFactorChallenge.tsx` — reusable verifier (used post-login when 2FA is enabled).
-
-## 6. Login integration
-
-In `AuthPage.tsx`, after successful `signInWithPassword`, check `user_2fa.enabled`. If true, sign the user back out of "active" UI state until they pass `twofa-challenge` + `twofa-verify`. Simpler approach: keep session, but gate `/dashboard` redirect behind a `<TwoFactorChallenge />` step.
-
-## 7. Dependencies
-
-- `face-api.js` for face descriptors (loads models from a CDN; no extra build steps).
+- New "Loans" section in the dashboard wallet area: current debt, active loans, next due date, amount due, pay button, and a form to take a new loan.
+- New admin page for appeals and unlocks, reachable from settings for the two admin accounts.
 
 ## Technical notes
 
-- Codes: 6 digits, 10-min TTL, hashed with SHA-256 before storage.
-- File secret: 32 random bytes hex, compared constant-time on verify.
-- Face match threshold: Euclidean distance ≤ 0.5 between stored and live descriptor.
-- All 2FA edge functions accept the user JWT and resolve `user_id` via `auth.getClaims` — never trust client-supplied user_id.
-- `supabase/config.toml` gets new `[functions.twofa-*]` blocks with `verify_jwt = false`.
-
-## Open questions
-
-1. Should 2FA be required at every sign-in once enabled, or only for sensitive actions (sending Croins, admin balance changes)?
-2. For SMS, should we restrict to certain country prefixes, or accept any E.164 number?
-3. Face Scan: store the descriptor only (recommended, ~1KB, privacy-friendly), or also a reference image? I'll default to descriptor-only unless you want the image too.
+- Tables: `loans` (principal, total owed, remaining, schedule week/month, instalment amount, next_due_at, status), `loan_payments` (history), `loan_appeals` (message, status, admin reply), and a `loan_penalties` record per user (miss count, lock level, cleared_at).
+- Borrowing, paying, and penalty escalation run in security-definer SQL functions with row locking, mirroring `transfer_croins` and `trade_share`, so balances can't race.
+- A due-date sweep function marks overdue instalments, attempts auto-charge, and escalates miss count; it runs on demand when the dashboard or any loan-related edge function is hit (no cron needed), so consequences apply the moment a user or the API touches the system.
+- Edge functions `loan-take`, `loan-pay`, `loan-appeal`, `loan-admin` (verify_jwt=false, JWT validated in code, killswitch + lockdown checks like existing functions).
+- Level-2 lock is checked in `send-croins` and `croins` (return 423 with a `loan_overdue` code); level-3 writes to the existing `account_lockdowns` table so the current lockdown flow handles sign-out and API blocking.
+- RLS: users read only their own loans, payments, penalties, and appeals; admins (via `is_owner_email()`) read all; all writes go through the security-definer functions.
