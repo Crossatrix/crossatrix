@@ -99,8 +99,13 @@ export default function AuthPage() {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
+        if (!data.session) {
+          // Email verification required — no session until confirmed
+          setSignupSent(true);
+          return;
+        }
         navigate("/dashboard");
       } else {
         if (email.includes("@")) {
