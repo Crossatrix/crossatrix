@@ -172,6 +172,18 @@ export default function SettingsPage() {
         </section>
 
         {isAdmin && (
+          <section className="p-6 rounded-2xl border border-border bg-card shadow-vault space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-mono uppercase tracking-widest text-muted-foreground">Loan Appeals</h2>
+                <p className="text-xs text-muted-foreground mt-1">Review appeals, unlock accounts, reset missed payments.</p>
+              </div>
+              <Button onClick={() => navigate("/loan-admin")}>Open</Button>
+            </div>
+          </section>
+        )}
+
+        {isAdmin && (
           <section className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 shadow-vault space-y-4">
             <div className="flex items-center justify-between gap-4">
               <div>

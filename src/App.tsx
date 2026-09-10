@@ -18,6 +18,7 @@ import NewSchoolPage from "./pages/school/NewSchoolPage";
 import TeacherPage from "./pages/school/TeacherPage";
 import PrincipalPage from "./pages/school/PrincipalPage";
 import SchoolsAdminPage from "./pages/school/SchoolsAdminPage";
+import LoanAdminPage from "./pages/LoanAdminPage";
 import NotFound from "./pages/NotFound";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 import SiteGate from "./components/SiteGate";
@@ -56,6 +57,7 @@ const App = () => (
           <Route path="/school/teacher" element={<TeacherPage />} />
           <Route path="/school/principal" element={<PrincipalPage />} />
           <Route path="/school/admin" element={<SchoolsAdminPage />} />
+          <Route path="/loan-admin" element={<LoanAdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </main>

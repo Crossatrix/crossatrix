@@ -18,6 +18,7 @@ import Newspaper from "@/components/Newspaper";
 import ShareButton from "@/components/ShareButton";
 import RedeemCode from "@/components/RedeemCode";
 import Shares from "@/components/Shares";
+import Loans from "@/components/Loans";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStudentRestrictions } from "@/hooks/useStudentRestrictions";
 import { readCache, writeCache, triggerRefresh } from "@/lib/dataCache";
@@ -318,6 +319,9 @@ export default function Dashboard() {
 
             {/* Redeem Code */}
             {user && <RedeemCode userId={user.id} userEmail={user.email} />}
+
+            {/* Loans */}
+            {user && <Loans onChange={() => loadBalance(user.id)} />}
 
             {/* Transaction History */}
             {user && <TransactionHistory userId={user.id} />}
