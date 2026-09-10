@@ -209,6 +209,40 @@ export default function AuthPage() {
 
 
 
+  if (signupSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, duration: 0.6 }}
+          className="w-full max-w-[400px]"
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-2 w-2 rounded-full bg-primary glow-primary" />
+            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Identity Nexus
+            </span>
+          </div>
+          <h1 className="text-4xl font-semibold tracking-tight-brand text-foreground">
+            Check your inbox.
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            We sent a verification link to <span className="text-foreground">{email}</span>.
+            Confirm your email to activate your identity, then sign in.
+          </p>
+          <Button
+            variant="signal"
+            className="w-full mt-6"
+            onClick={() => { setSignupSent(false); setMode("login"); setPassword(""); }}
+          >
+            Back to sign in
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <motion.div
