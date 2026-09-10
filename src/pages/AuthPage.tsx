@@ -66,6 +66,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
   const navigate = useNavigate();
 
   const [twofaMethod, setTwofaMethod] = useState<"email" | "sms" | "file" | "face" | null>(null);
