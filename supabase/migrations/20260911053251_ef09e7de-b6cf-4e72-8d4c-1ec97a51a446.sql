@@ -67,8 +67,8 @@ BEGIN
   IF _schedule NOT IN ('week','month') THEN
     RAISE EXCEPTION 'Schedule must be week or month';
   END IF;
-  IF _amount IS NULL OR _amount < 100 THEN
-    RAISE EXCEPTION 'Minimum loan is 100 Croins';
+  IF _amount IS NULL OR _amount < 10 THEN
+    RAISE EXCEPTION 'Minimum loan is 10 Croins';
   END IF;
 
   SELECT u.created_at INTO account_created FROM auth.users u WHERE u.id = _user;
