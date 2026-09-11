@@ -168,7 +168,7 @@ export default function Loans({ onChange }: { onChange?: () => void }) {
             <Input
               id="loan-amount"
               inputMode="numeric"
-              placeholder="Amount (min 10)"
+              placeholder="Amount (min 100)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
