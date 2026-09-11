@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
     await admin.rpc("loan_sweep", { _user: userId });
 
     if (action === "take") {
-      if (typeof amount !== "number" || !Number.isInteger(amount) || amount < 100) {
-        return json({ error: "amount must be a whole number of at least 100" }, 400);
+      if (typeof amount !== "number" || !Number.isInteger(amount) || amount < 10) {
+        return json({ error: "amount must be a whole number of at least 10" }, 400);
       }
       if (schedule !== "week" && schedule !== "month") {
         return json({ error: "schedule must be 'week' or 'month'" }, 400);

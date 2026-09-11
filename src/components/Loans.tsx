@@ -73,7 +73,7 @@ export default function Loans({ onChange }: { onChange?: () => void }) {
 
   const take = async () => {
     const n = parseInt(amount, 10);
-    if (!Number.isInteger(n) || n < 100) { toast.error("Enter at least 100 Croins"); return; }
+    if (!Number.isInteger(n) || n < 10) { toast.error("Enter at least 10 Croins"); return; }
     setBusy(true);
     try {
       const d = await callLoans({ action: "take", amount: n, schedule });
@@ -168,7 +168,7 @@ export default function Loans({ onChange }: { onChange?: () => void }) {
             <Input
               id="loan-amount"
               inputMode="numeric"
-              placeholder="Amount (min 100)"
+              placeholder="Amount (min 10)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
