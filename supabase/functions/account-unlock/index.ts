@@ -33,12 +33,20 @@ Deno.serve(async (req) => {
       return json({ error: "Email and passcode are required" }, 400);
     }
 
-    // Look up the user by email.
-    const { data: list, error: listError } = await admin.auth.admin.listUsers();
-    if (listError) {
-      return json({ error: "Lookup failed" }, 500);
+    // Look up the user by email (paginate — listUsers only returns one page).
+    const target = email.toLowerCase();
+    let user: { id: string; email?: string | null } | undefined;
+    for (let page = 1; page <= 50; page++) {
+      const { data: list, error: listError } = await admin.auth.admin.listUsers({
+        page,
+        perPage: 200,
+      });
+      if (listError) {
+        return json({ error: "Lookup failed" }, 500);
+      }
+      user = list.users.find((u) => u.email?.toLowerCase() === target);
+      if (user || list.users.length < 200) break;
     }
-    const user = list.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
     if (!user) {
       return json({ error: "Invalid email or passcode" }, 401);
     }
