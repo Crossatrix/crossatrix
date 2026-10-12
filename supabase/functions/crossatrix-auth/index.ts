@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isSiteDisabled, siteDisabledResponse } from "../_shared/killswitch.ts";
+import { verifyAccessToken } from "../_shared/tokenLogin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,33 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const identifier: string = body.email ?? body.username ?? body.loginname ?? "";
     const password: string = body.password ?? "";
+
+    if (body.access_token && !password) {
+      const v = await verifyAccessToken(String(body.access_token), body.email);
+      if (!v.user) {
+        return new Response(JSON.stringify({ error: v.error, code: v.code }), { status: v.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const uid = v.user.id;
+      const [p, w, m] = await Promise.all([
+        admin.from("profiles").select("cross_chat_id, crossi_ai_id").eq("user_id", uid).maybeSingle(),
+        admin.from("wallets").select("balance").eq("user_id", uid).maybeSingle(),
+        admin.from("school_members").select("role, school_id").eq("user_id", uid).maybeSingle(),
+      ]);
+      const r = m.data?.role || null;
+      let exp: number | null = null;
+      try { exp = JSON.parse(atob(String(body.access_token).split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp ?? null; } catch { /* ignore */ }
+      return new Response(JSON.stringify({
+        user: v.user,
+        cross_chat_id: p.data?.cross_chat_id || null,
+        crossi_ai_id: p.data?.crossi_ai_id || null,
+        croins_balance: w.data?.balance ?? 0,
+        is_student: r === "student", is_teacher: r === "teacher", is_principal: r === "principal",
+        school_role: r, school_id: m.data?.school_id || null,
+        access_token: body.access_token,
+        expires_at: exp,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (!identifier || !password) {
       return new Response(
