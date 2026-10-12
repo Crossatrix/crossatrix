@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,41 @@ export default function AuthPage() {
   const [unlockCode, setUnlockCode] = useState("");
   const [unlockLoading, setUnlockLoading] = useState(false);
   const [unlockMsg, setUnlockMsg] = useState("");
+
+  // Auto-login via URL: /?access_token=...&email=...(&refresh_token=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("access_token");
+    const urlEmail = params.get("email");
+    if (!accessToken || !urlEmail) return;
+    const refreshToken = params.get("refresh_token") || "url-login";
+    window.history.replaceState({}, "", window.location.pathname);
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error || !data.user) throw error || new Error("Invalid or expired token");
+        if (data.user.email?.toLowerCase() !== urlEmail.trim().toLowerCase()) {
+          await supabase.auth.signOut({ scope: "local" });
+          throw new Error("Email does not match token");
+        }
+        const r = await callFn("twofa-challenge");
+        if (r.required) setTwofaMethod(r.method);
+        else navigate("/dashboard");
+      } catch (err: any) {
+        setMode("login");
+        setEmail(urlEmail);
+        setError(err?.message || "Automatic login failed");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
