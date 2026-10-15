@@ -37,6 +37,7 @@ export default function LoanAdminPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
   const [locks, setLocks] = useState<Lock[]>([]);
+  const [locked, setLocked] = useState<{ user_id: string; email: string | null; lock_level: number; misses: number; account_locked: boolean }[]>([]);
   const [reply, setReply] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -47,6 +48,7 @@ export default function LoanAdminPage() {
       setLoans(d.loans ?? []);
       setPenalties(d.penalties ?? []);
       setLocks(d.locks ?? []);
+      setLocked(d.locked ?? []);
     } catch (e) { toast.error((e as Error).message); }
   }, []);
 
@@ -78,6 +80,32 @@ export default function LoanAdminPage() {
           <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>Back</Button>
         </div>
 
+        <section className="p-6 rounded-2xl border border-border bg-card shadow-vault space-y-3">
+          <h2 className="text-lg font-semibold">Locked accounts</h2>
+          {locked.length === 0 && <p className="text-sm text-muted-foreground">No locked accounts.</p>}
+          {locked.map((l) => (
+            <div key={l.user_id} className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{l.email ?? l.user_id}</p>
+                <p className="text-xs font-mono text-destructive">
+                  {l.account_locked || l.lock_level >= 3 ? "ACCOUNT LOCKED" : l.lock_level >= 2 ? "CROINS LOCKED" : "WARNING"} · misses {l.misses}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="signal" disabled={busy}
+                  onClick={() => act({ action: "unlock", user_id: l.user_id }, "Locks removed")}>
+                  Remove lock
+                </Button>
+                <Button size="sm" variant="outline" disabled={busy}
+                  onClick={() => act({ action: "unlock", user_id: l.user_id, forgive: true }, "Unlocked and forgiven")}>
+                  + forgive
+                </Button>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <h2 className="text-lg font-semibold">Appeals</h2>
         {appeals.length === 0 && <p className="text-sm text-muted-foreground">No appeals yet.</p>}
 
         {appeals.map((a) => {

@@ -60,7 +60,28 @@ Deno.serve(async (req) => {
         ? await admin.from("account_lockdowns").select("user_id, locked").in("user_id", ids)
         : { data: [] as unknown[] };
 
-      return json({ appeals: appeals ?? [], loans: loans ?? [], penalties: penalties ?? [], locks: locks ?? [] });
+      // All currently locked users (loan Croin lock or full account lock), with emails.
+      const [{ data: lockedPen }, { data: lockedAcc }] = await Promise.all([
+        admin.from("loan_penalties").select("user_id, misses, lock_level").gt("lock_level", 0),
+        admin.from("account_lockdowns").select("user_id").eq("locked", true),
+      ]);
+      const lockedIds = [...new Set([
+        ...(lockedPen ?? []).map((p) => p.user_id),
+        ...(lockedAcc ?? []).map((l) => l.user_id),
+      ])];
+      const locked = await Promise.all(lockedIds.map(async (uid) => {
+        const { data: u } = await admin.auth.admin.getUserById(uid);
+        const pen = (lockedPen ?? []).find((p) => p.user_id === uid);
+        return {
+          user_id: uid,
+          email: u?.user?.email ?? null,
+          lock_level: pen?.lock_level ?? 0,
+          misses: pen?.misses ?? 0,
+          account_locked: (lockedAcc ?? []).some((l) => l.user_id === uid),
+        };
+      }));
+
+      return json({ appeals: appeals ?? [], loans: loans ?? [], penalties: penalties ?? [], locks: locks ?? [], locked });
     }
 
     if (action === "resolve") {
