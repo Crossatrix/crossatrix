@@ -2,7 +2,7 @@
 // that historically call /functions/v1/crossatrix-login.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isSiteDisabled, siteDisabledResponse } from "../_shared/killswitch.ts";
-import { verifyAccessToken } from "../_shared/tokenLogin.ts";
+import { verifyAccessToken, tosError } from "../_shared/tokenLogin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +112,11 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Invalid credentials" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const tosErr = await tosError(data.user.user_metadata);
+    if (tosErr) {
+      return new Response(JSON.stringify({ error: tosErr.error, code: tosErr.code }), { status: tosErr.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const authed = createClient(supabaseUrl, anonKey, {
