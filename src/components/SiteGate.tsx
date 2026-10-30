@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteEnabled } from "@/hooks/useSiteEnabled";
+import { currentTosVersion } from "@/lib/tos";
 
 const ADMIN_EMAILS = [
   "cross.a.trix.owner@hotmail.com",
@@ -21,17 +22,22 @@ export default function SiteGate({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [tosVersion, setTosVersion] = useState<string | null>(null);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setAuthLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    currentTosVersion().then(setTosVersion).catch(() => setTosVersion(""));
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const tosAccepted = !!session?.user?.user_metadata?.tos_accepted_at;
-  const needsTos = !!session && !tosAccepted && !TOS_EXEMPT.includes(location.pathname);
+  const meta = session?.user?.user_metadata ?? {};
+  // If the terms can't be loaded, only require that they were accepted once.
+  const tosAccepted = !!meta.tos_accepted_at && (!tosVersion || meta.tos_version === tosVersion);
+  const needsTos = !!session && tosVersion !== null && !tosAccepted && !TOS_EXEMPT.includes(location.pathname);
 
   useEffect(() => {
     if (!authLoading && needsTos) {
