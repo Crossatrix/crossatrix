@@ -20,6 +20,7 @@ import PrincipalPage from "./pages/school/PrincipalPage";
 import SchoolsAdminPage from "./pages/school/SchoolsAdminPage";
 import LoanAdminPage from "./pages/LoanAdminPage";
 import NotFound from "./pages/NotFound";
+import TosPage from "./pages/TosPage";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 import SiteGate from "./components/SiteGate";
 import StatusLight from "./components/StatusLight";
@@ -58,6 +59,7 @@ const App = () => (
           <Route path="/school/principal" element={<PrincipalPage />} />
           <Route path="/school/admin" element={<SchoolsAdminPage />} />
           <Route path="/loan-admin" element={<LoanAdminPage />} />
+          <Route path="/tos" element={<TosPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </main>
