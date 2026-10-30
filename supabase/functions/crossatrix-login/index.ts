@@ -114,7 +114,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const tosErr = await tosError(data.user.user_metadata);
+    // The Crossatrix website shows its own /tos page after sign-in, so it skips this check.
+    const tosErr = body.client === "crossatrix-web" ? null : await tosError(data.user.user_metadata);
     if (tosErr) {
       return new Response(JSON.stringify({ error: tosErr.error, code: tosErr.code }), { status: tosErr.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
