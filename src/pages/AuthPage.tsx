@@ -148,7 +148,7 @@ export default function AuthPage() {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
         } else {
-          const r = await callFn("crossatrix-login", { username: email, password });
+          const r = await callFn("crossatrix-login", { username: email, password, client: "crossatrix-web" });
           if (!r.access_token) throw new Error(r.error || "Invalid credentials");
           const { error: sErr } = await supabase.auth.setSession({
             access_token: r.access_token,
